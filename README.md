@@ -8,7 +8,7 @@ Projeto desenvolvido como parte de uma dinâmica de Design Thinking: imersão, p
 
 | Mapa | Favoritos | Recentes |
 |---|---|---|
-| ![Mapa com vinícolas próximas, busca e filtros por tipo de vinho](docs/screenshots/mapa.png) | ![Aba de favoritos, estado vazio](docs/screenshots/favoritos.png) | ![Aba de recentes, estado vazio](docs/screenshots/recentes.png) |
+| <img src="docs/screenshots/mapa.png" width="260" alt="Mapa com vinícolas próximas, busca e filtros por tipo de vinho"> | <img src="docs/screenshots/favoritos.png" width="260" alt="Aba de favoritos, estado vazio"> | <img src="docs/screenshots/recentes.png" width="260" alt="Aba de recentes, estado vazio"> |
 
 - **Mapa** — busca por vinícola/cidade, filtros por tipo de vinho (Tinto, Branco, Espumante, Rosé) e lista de vinícolas próximas com distância e avaliação, sincronizada com os pins no mapa.
 - **Favoritos** — vinícolas salvas pelo usuário para visitar depois (estado vazio ilustrado acima).
