@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="nocturne-styles.css">
+  <style>
+    html, body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0d0e14; }
+  </style>
+</helmet>
+
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402,874">
+  <div style="height:100%;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);position:relative;overflow:hidden;font-family:var(--font-body);">
+
+    <sc-if value="{{ isMapTab }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:54px 16px 10px;display:flex;flex-direction:column;gap:10px;flex:none;">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:8px 12px;">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--color-neutral-400)" stroke-width="1.6"></circle><path d="M16 16l-3.5-3.5" stroke="var(--color-neutral-400)" stroke-width="1.6" stroke-linecap="round"></path></svg>
+          <input type="text" placeholder="Buscar vinícola ou cidade" value="{{ search }}" onChange="{{ onSearchChange }}" style="flex:1;background:none;border:none;outline:none;color:var(--color-text);font-size:14px;font-family:var(--font-body);"/>
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;">
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+            <div onClick="{{ f.toggle }}" style="flex:none;padding:6px 14px;border-radius:999px;font-size:12px;cursor:pointer;border:1px solid {{ f.borderColor }};color:{{ f.textColor }};background:{{ f.bgColor }};">{{ f.name }}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex:1;position:relative;min-height:0;overflow:hidden;">
+        <iframe src="{{ mapSrc }}" style="width:100%;height:100%;border:none;display:block;" title="Mapa de vinícolas"></iframe>
+      </div>
+
+      <div style="flex:none;max-height:38%;overflow-y:auto;background:var(--color-surface);border-top:1px solid var(--color-divider);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:10px 16px 6px;display:flex;flex-direction:column;gap:8px;">
+        <div style="width:36px;height:4px;border-radius:2px;background:var(--color-divider);margin:0 auto 4px;"></div>
+        <sc-for list="{{ listWineries }}" as="w" hint-placeholder-count="4">
+          <div onClick="{{ w.open }}" class="card" style="cursor:pointer;flex-direction:row;align-items:center;gap:10px;padding:10px;">
+            <div style="width:52px;height:52px;flex:none;border-radius:8px;background:repeating-linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-800) 6px, var(--color-neutral-900) 6px, var(--color-neutral-900) 12px);"></div>
+            <div style="flex:1;min-width:0;">
+              <div class="card-title" style="font-size:15px;">{{ w.name }}</div>
+              <div class="card-meta">{{ w.typesText }} · {{ w.distanceText }} · ★ {{ w.rating }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFavTab }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:54px 16px 12px;flex:none;"><h2 style="margin:0;">Favoritos</h2></div>
+      <div style="flex:1;overflow-y:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ favoritesList }}" as="w" hint-placeholder-count="0">
+          <div onClick="{{ w.open }}" class="card" style="cursor:pointer;flex-direction:row;align-items:center;gap:10px;padding:10px;">
+            <div style="width:52px;height:52px;flex:none;border-radius:8px;background:repeating-linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-800) 6px, var(--color-neutral-900) 6px, var(--color-neutral-900) 12px);"></div>
+            <div style="flex:1;min-width:0;">
+              <div class="card-title" style="font-size:15px;">{{ w.name }}</div>
+              <div class="card-meta">{{ w.typesText }} · {{ w.distanceText }} · ★ {{ w.rating }}</div>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noFavorites }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:60px 20px;color:var(--color-neutral-500);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="margin:0 auto;"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.8 1.2 6 3.5C14.2 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z" stroke="currentColor" stroke-width="1.4"></path></svg>
+            <p style="margin-top:12px;font-size:13px;">Nenhuma vinícola favoritada ainda.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRecentsTab }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:54px 16px 12px;flex:none;"><h2 style="margin:0;">Recentes</h2></div>
+      <div style="flex:1;overflow-y:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ recentsList }}" as="w" hint-placeholder-count="0">
+          <div onClick="{{ w.open }}" class="card" style="cursor:pointer;flex-direction:row;align-items:center;gap:10px;padding:10px;">
+            <div style="width:52px;height:52px;flex:none;border-radius:8px;background:repeating-linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-800) 6px, var(--color-neutral-900) 6px, var(--color-neutral-900) 12px);"></div>
+            <div style="flex:1;min-width:0;">
+              <div class="card-title" style="font-size:15px;">{{ w.name }}</div>
+              <div class="card-meta">{{ w.typesText }} · {{ w.distanceText }} · ★ {{ w.rating }}</div>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noRecents }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:60px 20px;color:var(--color-neutral-500);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="margin:0 auto;"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"></circle><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+            <p style="margin-top:12px;font-size:13px;">Nenhuma vinícola visitada ainda.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;overflow-y:auto;">
+        <div style="position:relative;height:200px;background:repeating-linear-gradient(135deg, var(--color-surface), var(--color-surface) 10px, var(--color-neutral-900) 10px, var(--color-neutral-900) 20px);">
+          <div onClick="{{ goBack }}" style="position:absolute;top:54px;left:16px;width:36px;height:36px;border-radius:50%;background:color-mix(in srgb, var(--color-bg) 70%, transparent);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none"><path d="M8 1L1.5 8 8 15" stroke="var(--color-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <div style="position:absolute;bottom:14px;left:16px;font-family:ui-monospace, Menlo, monospace;font-size:11px;color:var(--color-neutral-500);">FOTO — {{ selectedWinery.name }}</div>
+        </div>
+        <div style="display:flex;gap:8px;padding:10px 16px;overflow-x:auto;">
+          <sc-for list="{{ photoPlaceholders }}" as="ph" hint-placeholder-count="3">
+            <div style="flex:none;width:84px;height:60px;border-radius:6px;background:repeating-linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-800) 5px, var(--color-neutral-900) 5px, var(--color-neutral-900) 10px);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:var(--color-neutral-600);">{{ ph.label }}</div>
+          </sc-for>
+        </div>
+        <div style="padding:4px 16px 24px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <h2 style="margin:0 0 4px;">{{ selectedWinery.name }}</h2>
+            <div style="font-size:13px;color:var(--color-neutral-400);">{{ selectedWinery.city }} · {{ selectedWinery.distanceText }}</div>
+            <div style="margin-top:6px;font-size:13px;color:var(--color-accent-300);">★ {{ selectedWinery.rating }} <span style="color:var(--color-neutral-500);">({{ selectedWinery.reviews }} avaliações)</span></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <sc-for list="{{ selectedWinery.typesList }}" as="t" hint-placeholder-count="2">
+              <span class="tag tag-accent-2">{{ t }}</span>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn {{ selectedWinery.favBtnClass }}" style="flex:1;" onClick="{{ selectedWinery.toggleFav }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ selectedWinery.heartFill }}"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.8 1.2 6 3.5C14.2 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z" stroke="var(--color-accent)" stroke-width="1.4"></path></svg>
+              {{ selectedWinery.favLabel }}
+            </button>
+            <button class="btn btn-primary" style="flex:1;" onClick="{{ goToRoute }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 20l8-5 8 5-8-18z" fill="var(--color-accent)"></path></svg>
+              Rota
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-kicker">Endereço</div>
+            <div class="card-body" style="opacity:1;">{{ selectedWinery.addr }}</div>
+            <div class="card-meta" style="margin-top:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"></circle><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+              {{ selectedWinery.hours }}
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-kicker">Degustação</div>
+            <div class="card-body" style="opacity:1;">A partir de {{ selectedWinery.priceText }} por pessoa</div>
+          </div>
+          <div class="card" style="gap:10px;">
+            <div class="card-kicker">Contato</div>
+            <a href="{{ selectedWinery.telHref }}" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--color-text);text-decoration:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 3h3l2 5-2.5 1.5a11 11 0 005 5L15 12l5 2v3a2 2 0 01-2 2C9.5 19 5 14.5 5 5a2 2 0 011-2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              {{ selectedWinery.phone }}
+            </a>
+            <a href="{{ selectedWinery.siteHref }}" target="_blank" style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--color-accent);text-decoration:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"></circle><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" stroke="currentColor" stroke-width="1.2"></path></svg>
+              {{ selectedWinery.site }}
+            </a>
+          </div>
+          <p style="font-size:13px;line-height:1.6;color:var(--color-neutral-300);margin:0;">{{ selectedWinery.blurb }}</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRoute }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;min-height:0;">
+        <div style="padding:54px 16px 12px;display:flex;align-items:center;gap:10px;flex:none;">
+          <div onClick="{{ backToDetail }}" style="width:36px;height:36px;flex:none;border-radius:50%;background:var(--color-surface);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none"><path d="M8 1L1.5 8 8 15" stroke="var(--color-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <h3 style="margin:0;font-size:17px;">Rota até {{ selectedWinery.name }}</h3>
+        </div>
+        <div style="flex:1;position:relative;min-height:0;overflow:hidden;">
+          <iframe src="{{ routeMapSrc }}" style="width:100%;height:100%;border:none;display:block;" title="Rota até a vinícola"></iframe>
+        </div>
+        <div style="flex:none;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--color-surface);border-top:1px solid var(--color-divider);">
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-family:var(--font-heading);">
+            <span>{{ selectedWinery.distanceText }}</span>
+            <span>{{ selectedWinery.etaText }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--color-neutral-500);">{{ selectedWinery.addr }}</div>
+          <button class="btn btn-primary btn-block" style="margin-top:0;" onClick="{{ backToDetail }}">Iniciar navegação</button>
+          <button class="btn btn-secondary btn-block" onClick="{{ backToDetail }}">Cancelar</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showTabBar }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;display:flex;border-top:1px solid var(--color-divider);padding:8px 0 22px;background:var(--color-surface);">
+        <div onClick="{{ setTabMap }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ mapTabColor }};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C7.5 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.5-8-8-8z" stroke="currentColor" stroke-width="1.6"></path><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.4"></circle></svg>
+          <span style="font-size:10px;">Mapa</span>
+        </div>
+        <div onClick="{{ setTabFav }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ favTabColor }};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 4c2.2 0 3.8 1.2 6 3.5C14.2 5.2 15.8 4 18 4c4 0 5.5 4 4 7.7C19.5 16.4 12 21 12 21z" stroke="currentColor" stroke-width="1.6"></path></svg>
+          <span style="font-size:10px;">Favoritos</span>
+        </div>
+        <div onClick="{{ setTabRecents }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ recentsTabColor }};">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"></circle><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+          <span style="font-size:10px;">Recentes</span>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 900}, &quot;startingTab&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;map&quot;, &quot;options&quot;: [&quot;map&quot;, &quot;favorites&quot;, &quot;recents&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamento&quot;}, &quot;unitSystem&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;km&quot;, &quot;options&quot;: [&quot;km&quot;, &quot;mi&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Comportamento&quot;}}">
+const WINERIES = [
+  { id: 'miolo', name: 'Miolo Wine Group', city: 'Vale dos Vinhedos, Bento Gonçalves', types: ['Tinto', 'Branco', 'Espumante'], rating: 4.7, reviews: 2840, priceFrom: 60, addr: 'Estrada do Vinho, km 21 — Vale dos Vinhedos, Bento Gonçalves - RS', hours: 'Seg–Dom, 9h às 17h', phone: '(54) 3559-9100', site: 'miolo.com.br', distanceKm: 4.2, blurb: 'Uma das maiores produtoras do Vale dos Vinhedos, com tours pelas vinhas e degustações guiadas em sua sede histórica.', x: 32, y: 40 },
+  { id: 'valduga', name: 'Casa Valduga', city: 'Vale dos Vinhedos, Bento Gonçalves', types: ['Tinto', 'Espumante'], rating: 4.8, reviews: 3510, priceFrom: 90, addr: 'RS-444, km 21 — Vale dos Vinhedos, Bento Gonçalves - RS', hours: 'Seg–Dom, 8h30 às 18h', phone: '(54) 3459-7000', site: 'casavalduga.com.br', distanceKm: 5.6, blurb: 'Vinícola familiar tradicional, conhecida por seus espumantes premiados e experiências gastronômicas entre os parreirais.', x: 48, y: 55 },
+  { id: 'aurora', name: 'Vinícola Aurora', city: 'Centro, Bento Gonçalves', types: ['Tinto', 'Branco'], rating: 4.5, reviews: 1920, priceFrom: 45, addr: 'Rua Olavo Bilac, 500 — Bento Gonçalves - RS', hours: 'Seg–Sáb, 8h às 17h30', phone: '(54) 2109-4030', site: 'vinicolaaurora.com.br', distanceKm: 2.1, blurb: 'Cooperativa centenária que reúne centenas de famílias produtoras da Serra Gaúcha em um circuito de visitação amplo.', x: 60, y: 25 },
+  { id: 'dongiovanni', name: 'Don Giovanni Vinhos', city: 'Vale dos Vinhedos, Bento Gonçalves', types: ['Tinto', 'Rosé'], rating: 4.6, reviews: 980, priceFrom: 70, addr: 'Linha Leopoldina — Vale dos Vinhedos, Bento Gonçalves - RS', hours: 'Qua–Dom, 9h às 17h', phone: '(54) 3451-0322', site: 'dongiovanni.com.br', distanceKm: 6.8, blurb: 'Pequena produção de base italiana, com terraço mirante voltado para o vale e roteiros de degustação harmonizada.', x: 22, y: 68 },
+  { id: 'lidiocarraro', name: 'Lídio Carraro', city: 'Vale dos Vinhedos, Bento Gonçalves', types: ['Tinto', 'Branco'], rating: 4.9, reviews: 1240, priceFrom: 110, addr: 'RS-444 — Vale dos Vinhedos, Bento Gonçalves - RS', hours: 'Seg–Dom, 9h às 17h', phone: '(54) 2909-6710', site: 'lidiocarraro.com', distanceKm: 5.1, blurb: 'Arquitetura contemporânea e vinhedos em socalcos; foco em rótulos de alta gama e visitas técnicas ao terroir.', x: 70, y: 60 },
+  { id: 'salton', name: 'Vinícola Salton', city: 'Tuiuty, Bento Gonçalves', types: ['Espumante', 'Tinto'], rating: 4.4, reviews: 2760, priceFrom: 50, addr: 'Rua Ver. Osvaldo Aranha, 3000 — Bento Gonçalves - RS', hours: 'Seg–Sáb, 9h às 17h', phone: '(54) 2109-4200', site: 'salton.com.br', distanceKm: 3.3, blurb: 'Uma das vinícolas mais antigas do Brasil, com museu do vinho e cave subterrânea de espumantes.', x: 44, y: 15 },
+  { id: 'cavegeisse', name: 'Cave Geisse', city: 'Pinto Bandeira', types: ['Espumante'], rating: 4.8, reviews: 1560, priceFrom: 85, addr: 'Linha Jansen — Pinto Bandeira - RS', hours: 'Ter–Dom, 9h às 16h30', phone: '(54) 3252-0888', site: 'cavegeisse.com.br', distanceKm: 12.4, blurb: 'Referência em método tradicional no Brasil, com vinhedos em altitude e degustações técnicas de espumantes.', x: 15, y: 20 },
+];
+
+const TYPES = ['Tinto', 'Branco', 'Espumante', 'Rosé'];
+
+class Component extends DCLogic {
+  componentDidMount() {
+    this._onMsg = e => {
+      if (e.data && e.data.type === 'openDetail') this.openDetail(e.data.id);
+    };
+    window.addEventListener('message', this._onMsg);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('message', this._onMsg);
+  }
+
+  state = {
+    activeTab: this.props.startingTab || 'map',
+    overlay: null,
+    selectedId: null,
+    favorites: [],
+    recents: [],
+    search: '',
+    filterType: null,
+  };
+
+  fmtDistance(km) {
+    const unit = this.props.unitSystem || 'km';
+    return unit === 'mi' ? (km * 0.621371).toFixed(1) + ' mi' : km.toFixed(1) + ' km';
+  }
+
+  openDetail(id) {
+    this.setState(s => ({
+      overlay: 'detail',
+      selectedId: id,
+      recents: [id, ...s.recents.filter(r => r !== id)].slice(0, 5),
+    }));
+  }
+  goBack() { this.setState({ overlay: null }); }
+  backToDetail() { this.setState({ overlay: 'detail' }); }
+  goToRoute() { this.setState({ overlay: 'route' }); }
+  toggleFavorite(id) {
+    this.setState(s => ({
+      favorites: s.favorites.includes(id) ? s.favorites.filter(f => f !== id) : [...s.favorites, id],
+    }));
+  }
+  setTab(tab) { this.setState({ activeTab: tab, overlay: null }); }
+  toggleFilter(t) { this.setState(s => ({ filterType: s.filterType === t ? null : t })); }
+
+  enrich(w) {
+    const favorited = this.state.favorites.includes(w.id);
+    return {
+      ...w,
+      typesText: w.types.join(' · '),
+      typesList: w.types,
+      distanceText: this.fmtDistance(w.distanceKm),
+      priceText: 'R$ ' + w.priceFrom,
+      etaText: Math.round((w.distanceKm / 40) * 60) + ' min',
+      telHref: 'tel:' + w.phone.replace(/[^0-9+]/g, ''),
+      siteHref: 'https://' + w.site,
+      favorited,
+      favBtnClass: favorited ? 'btn-primary' : 'btn-secondary',
+      favLabel: favorited ? 'Favoritado' : 'Favoritar',
+      heartFill: favorited ? 'var(--color-accent)' : 'none',
+      open: () => this.openDetail(w.id),
+      toggleFav: () => this.toggleFavorite(w.id),
+      size: w.id === this.state.selectedId ? 34 : 26,
+      z: w.id === this.state.selectedId ? 2 : 1,
+    };
+  }
+
+  renderVals() {
+    const { activeTab, overlay, selectedId, favorites, recents, search, filterType } = this.state;
+    const filtered = WINERIES.filter(w =>
+      (!filterType || w.types.includes(filterType)) &&
+      (search.trim() === '' || (w.name + ' ' + w.city).toLowerCase().includes(search.trim().toLowerCase()))
+    ).map(w => this.enrich(w));
+
+    const filters = TYPES.map(name => {
+      const active = filterType === name;
+      return {
+        name, active,
+        toggle: () => this.toggleFilter(name),
+        borderColor: active ? 'var(--color-accent)' : 'var(--color-divider)',
+        textColor: active ? 'var(--color-accent)' : 'var(--color-neutral-300)',
+        bgColor: active ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'transparent',
+      };
+    });
+
+    const favoritesList = favorites.map(id => WINERIES.find(w => w.id === id)).filter(Boolean).map(w => this.enrich(w));
+    const recentsList = recents.map(id => WINERIES.find(w => w.id === id)).filter(Boolean).map(w => this.enrich(w));
+    const selectedWinery = selectedId ? this.enrich(WINERIES.find(w => w.id === selectedId)) : null;
+
+    return {
+      isMapTab: activeTab === 'map' && !overlay,
+      isFavTab: activeTab === 'favorites' && !overlay,
+      isRecentsTab: activeTab === 'recents' && !overlay,
+      isDetail: overlay === 'detail',
+      isRoute: overlay === 'route',
+      showTabBar: !overlay,
+      search, onSearchChange: e => this.setState({ search: e.target.value }),
+      filters,
+      mapPins: filtered, listWineries: filtered,
+      favoritesList, noFavorites: favoritesList.length === 0,
+      recentsList, noRecents: recentsList.length === 0,
+      selectedWinery,
+      mapSrc: 'winery-map.html?mode=list&ids=' + filtered.map(w => w.id).join(',') + '&selected=' + (selectedId || ''),
+      routeMapSrc: selectedWinery ? 'winery-map.html?mode=route&selected=' + selectedWinery.id : 'winery-map.html?mode=route',
+      photoPlaceholders: [{ label: 'Foto 1' }, { label: 'Foto 2' }, { label: 'Foto 3' }],
+      goBack: () => this.goBack(),
+      backToDetail: () => this.backToDetail(),
+      goToRoute: () => this.goToRoute(),
+      setTabMap: () => this.setTab('map'),
+      setTabFav: () => this.setTab('favorites'),
+      setTabRecents: () => this.setTab('recents'),
+      mapTabColor: activeTab === 'map' && !overlay ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+      favTabColor: activeTab === 'favorites' && !overlay ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+      recentsTabColor: activeTab === 'recents' && !overlay ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+    };
+  }
+}
+</script>
+</body>
+</html>

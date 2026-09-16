@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+  html, body, #map { height: 100%; margin: 0; padding: 0; }
+  .winery-pin { width: 26px; height: 26px; border-radius: 50% 50% 50% 0; background: #9184d9; border: 2px solid #161826; transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  .winery-pin.selected { width: 34px; height: 34px; background: #b5abfc; }
+  .winery-pin::after { content: ''; position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: #161826; }
+  .winery-pin.selected::after { top: 9px; left: 9px; }
+  .me-dot { width: 16px; height: 16px; border-radius: 50%; background: #9184d9; border: 3px solid #f3f5fe; box-shadow: 0 0 0 6px rgba(145,132,217,0.28); }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  var WINERIES = [
+    { id: 'miolo', name: 'Miolo Wine Group', lat: -29.1444, lng: -51.4661 },
+    { id: 'valduga', name: 'Casa Valduga', lat: -29.1519, lng: -51.4589 },
+    { id: 'aurora', name: 'Vinícola Aurora', lat: -29.1685, lng: -51.5194 },
+    { id: 'dongiovanni', name: 'Don Giovanni Vinhos', lat: -29.1584, lng: -51.4817 },
+    { id: 'lidiocarraro', name: 'Lídio Carraro', lat: -29.1462, lng: -51.4530 },
+    { id: 'salton', name: 'Vinícola Salton', lat: -29.1932, lng: -51.5386 },
+    { id: 'cavegeisse', name: 'Cave Geisse', lat: -29.1206, lng: -51.5921 },
+  ];
+  var ME = { lat: -29.1739, lng: -51.5197 };
+
+  var params = new URLSearchParams(location.search);
+  var mode = params.get('mode') || 'list';
+  var idsParam = params.get('ids');
+  var selected = params.get('selected') || '';
+  var visibleIds = idsParam ? idsParam.split(',') : WINERIES.map(w => w.id);
+  var visible = WINERIES.filter(w => visibleIds.indexOf(w.id) !== -1);
+
+  var map = L.map('map', { zoomControl: false, attributionControl: true }).setView([ME.lat, ME.lng], 12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom: 18,
+  }).addTo(map);
+
+  function pinIcon(sel) {
+    return L.divIcon({ className: '', html: '<div class="winery-pin' + (sel ? ' selected' : '') + '" style="position:relative;"></div>', iconSize: sel ? [34,34] : [26,26], iconAnchor: sel ? [17,30] : [13,23] });
+  }
+  var meIcon = L.divIcon({ className: '', html: '<div class="me-dot"></div>', iconSize: [16,16], iconAnchor: [8,8] });
+
+  var bounds = [];
+  visible.forEach(function (w) {
+    var marker = L.marker([w.lat, w.lng], { icon: pinIcon(w.id === selected) }).addTo(map);
+    marker.on('click', function () {
+      parent.postMessage({ type: 'openDetail', id: w.id }, '*');
+    });
+    bounds.push([w.lat, w.lng]);
+  });
+
+  if (mode === 'route' && selected) {
+    var target = WINERIES.find(function (w) { return w.id === selected; });
+    if (target) {
+      L.marker([ME.lat, ME.lng], { icon: meIcon }).addTo(map);
+      L.polyline([[ME.lat, ME.lng], [target.lat, target.lng]], { color: '#9184d9', weight: 3, dashArray: '2 8' }).addTo(map);
+      bounds.push([ME.lat, ME.lng]);
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+  } else if (bounds.length) {
+    map.fitBounds(bounds, { padding: [30, 30] });
+  }
+</script>
+</body>
+</html>
