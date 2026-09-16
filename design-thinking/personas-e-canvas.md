@@ -89,7 +89,15 @@
 
 > Turistas de enoturismo perdem tempo e confiança ao planejar visitas porque a informação sobre vinícolas próximas (localização, horário, preço, avaliação) está espalhada em múltiplas fontes desatualizadas, e não existe um jeito simples de lembrar o que já foi visitado ou favoritar o que se quer visitar — o que gera roteiros mal planejados e visitas frustradas (vinícola fechada, lotada ou fora do orçamento).
 
-**Hipótese de solução:** um app mobile focado (Winery Finder) que centraliza busca por proximidade, filtros por tipo de vinho, ficha confiável por vinícola (horário, preço, contato, avaliação), rota/navegação integrada, e histórico de favoritos/recentes.
+**Hipótese de solução:** um app mobile focado (Winery Finder), construído em **Flutter** (design em **Figma**) com backend em **Firebase**, que centraliza busca por proximidade, filtros por tipo de vinho, ficha confiável por vinícola (horário, preço, contato, avaliação), rota/navegação via GPS, e histórico de favoritos/recentes.
+
+### Stack técnica definida pela equipe
+
+- **Design:** Figma (telas e protótipo navegável).
+- **App:** Flutter (iOS/Android a partir da mesma base de código).
+- **Backend:** Firebase — **Firestore** como banco de dados para o CRUD de vinícola: cadastro de detalhes (nome, tipos de vinho, horário, preço da degustação, contato, site) e localização (lat/long), listagem para o app consumir. Fotos, se houver, em **Firebase Storage**.
+- **No app (cliente):** consome a listagem/detalhe de vinícolas do Firestore, mostra no mapa, permite abrir a ficha, traçar rota/GPS até o local; **favoritos e recentes ficam como estado local do app** (não é uma coleção do backend nesta versão — cada usuário guarda a própria lista no dispositivo).
+- **Cadastro de vinícola (CRUD):** feito do nosso lado (equipe/admin), não pelo usuário final do app — por isso não há tela de "adicionar vinícola" pensada nas personas de turista.
 
 ---
 
@@ -100,8 +108,9 @@
 | **Público-alvo** | Turistas de enoturismo (casais, pequenos grupos, colecionadores), 24–55 anos, que planejam roteiros de vinícolas em viagens curtas. |
 | **Personas** | Camila (exploradora de fim de semana), Eduardo (colecionador que retorna), Grupo de amigas (orçamento/primeira viagem). |
 | **Problema** | Informação fragmentada e desatualizada sobre vinícolas dificulta planejar e confiar no roteiro; não há registro do que já foi visitado. |
-| **Funcionalidades principais (backlog)** | 1. Mapa com busca e filtros por tipo de vinho/distância · 2. Lista de vinícolas próximas com nota e distância · 3. Ficha de vinícola (horário, preço, contato, site, avaliações) · 4. Favoritar vinícolas · 5. Histórico de recentes (auto) · 6. Rota/navegação integrada com ETA · 7. Ligar/abrir site direto da ficha |
-| **Desafios identificados** | **UX:** simplificar decisão em tela pequena, dentro do carro, com pouca atenção disponível. **Performance/conectividade:** funcionar bem com internet instável em zona rural (cache de dados básicos). **Dados:** manter horário/preço atualizado (fonte confiável ou parceria com vinícolas). **Confiança:** garantir que avaliações sejam reais/atuais. |
+| **Stack** | Design: Figma · App: Flutter · Backend: Firebase (Firestore + Storage) |
+| **Funcionalidades principais (backlog)** | 1. Mapa com busca e filtros por tipo de vinho/distância · 2. Lista de vinícolas próximas com nota e distância · 3. Ficha de vinícola (horário, preço, contato, site, avaliações) · 4. Favoritar vinícolas (estado local no app) · 5. Histórico de recentes (estado local no app) · 6. Rota/navegação via GPS com ETA · 7. Ligar/abrir site direto da ficha · 8. **[Admin/backend]** CRUD de vinícola no Firestore — cadastro de detalhes e localização, edição, listagem |
+| **Desafios identificados** | **UX:** simplificar decisão em tela pequena, dentro do carro, com pouca atenção disponível. **Performance/conectividade:** app Flutter + Firestore precisam funcionar com internet instável em zona rural (cache local/offline do Firestore). **Dados:** manter horário/preço atualizado no Firestore (quem alimenta o CRUD e com que frequência). **Estado local:** favoritos/recentes não sincronizam entre aparelhos — se o usuário trocar de celular, perde a lista (aceitável para o escopo do MVP, mas vale registrar como limitação). **Localização/GPS:** pedir permissão de localização de forma clara e lidar com GPS impreciso em áreas rurais. |
 
 ---
 

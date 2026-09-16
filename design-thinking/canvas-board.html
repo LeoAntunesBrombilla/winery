@@ -268,10 +268,12 @@
     <div class="frame">
       <h3 class="frame-title">Atividades necessárias</h3>
       <div class="notes">
-        <div class="note c-green">Mapear vinícolas parceiras e coletar dados (horário, preço, contato)</div>
-        <div class="note c-green">Prototipar as telas principais no Claude Design</div>
+        <div class="note c-green">Prototipar as telas no Figma</div>
+        <div class="note c-green">Modelar coleção de vinícola no Firestore (detalhes + localização)</div>
+        <div class="note c-green">Implementar CRUD de vinícola (cadastro, edição, listagem) no Firebase</div>
+        <div class="note c-green">Construir o app em Flutter: mapa, ficha, favoritos/recentes (estado local)</div>
+        <div class="note c-green">Integrar Flutter com Firestore e GPS/rota</div>
         <div class="note c-green">Validar personas com entrevistas reais</div>
-        <div class="note c-green">Testar fluxo de rota/navegação no protótipo</div>
         <div class="note c-green">Planejar e conduzir teste de usabilidade</div>
       </div>
     </div>
@@ -279,7 +281,9 @@
     <div class="frame">
       <h3 class="frame-title">Entregas</h3>
       <div class="notes">
-        <div class="note c-yellow">Protótipo clicável do app (mapa, ficha, rota, favoritos, recentes)</div>
+        <div class="note c-yellow">Protótipo navegável no Figma</div>
+        <div class="note c-yellow">App Flutter (MVP) conectado ao Firebase</div>
+        <div class="note c-yellow">CRUD de vinícola funcionando no Firestore</div>
         <div class="note c-yellow">Relatório de imersão: personas e mapas de empatia</div>
         <div class="note c-yellow">Canvas do projeto (este quadro)</div>
         <div class="note c-yellow">Vídeo de apresentação (5 min)</div>
@@ -293,9 +297,10 @@
     <div class="frame">
       <h3 class="frame-title">Riscos</h3>
       <div class="notes">
-        <div class="note c-orange">Dados de horário/preço desatualizados sem parceria com as vinícolas</div>
-        <div class="note c-orange">Internet instável em zona rural prejudica mapa e rota em tempo real</div>
-        <div class="note c-orange">Baixa adesão das vinícolas em manter a ficha atualizada</div>
+        <div class="note c-orange">Dados de horário/preço desatualizados sem processo de manutenção do CRUD</div>
+        <div class="note c-orange">Internet instável em zona rural prejudica mapa e leitura do Firestore em tempo real</div>
+        <div class="note c-orange">GPS impreciso em estrada rural atrapalha a rota até a vinícola</div>
+        <div class="note c-orange">Favoritos/recentes em estado local somem se o usuário trocar de aparelho</div>
       </div>
     </div>
 
@@ -303,7 +308,9 @@
       <h3 class="frame-title">Milestones</h3>
       <div class="notes">
         <div class="note c-orange">Imersão + personas definidas</div>
-        <div class="note c-orange">Protótipo navegável pronto</div>
+        <div class="note c-orange">Protótipo Figma navegável</div>
+        <div class="note c-orange">Firestore + CRUD de vinícola funcionando</div>
+        <div class="note c-orange">App Flutter integrado ao Firebase</div>
         <div class="note c-orange">Apresentação e relatório final</div>
       </div>
     </div>
@@ -311,7 +318,8 @@
     <div class="frame">
       <h3 class="frame-title">Restrições</h3>
       <div class="notes">
-        <div class="note c-red">Protótipo é estático (sem backend/dados reais de vinícolas)</div>
+        <div class="note c-red">Cadastro de vinícola é feito pela equipe (admin), não pelo usuário final do app</div>
+        <div class="note c-red">Favoritos/recentes não sincronizam entre dispositivos (estado local, não é coleção no Firebase)</div>
         <div class="note c-red">Prazo definido pela disciplina — sem tempo para pesquisa extensa</div>
         <div class="note c-red">Escopo piloto: uma única região (Vale dos Vinhedos)</div>
       </div>
@@ -320,8 +328,8 @@
     <div class="frame">
       <h3 class="frame-title">Escopo</h3>
       <div class="notes">
-        <div class="note c-red">Dentro: mapa com filtros, ficha da vinícola, favoritos, recentes, rota/navegação</div>
-        <div class="note c-red">Fora (v1): reserva/pagamento online, rede social, avaliações escritas por usuários</div>
+        <div class="note c-red">Dentro: Firestore com CRUD de vinícola (detalhes + localização); app Flutter com mapa, ficha, GPS/rota, favoritos e recentes (estado local)</div>
+        <div class="note c-red">Fora (v1): login/perfil de usuário, reserva/pagamento online, rede social, avaliações escritas por usuários, sync de favoritos na nuvem</div>
       </div>
     </div>
 
