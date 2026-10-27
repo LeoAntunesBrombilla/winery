@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:winery_finder/data/location_provider.dart';
+import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/features/favorites/favorites_screen.dart';
 import 'package:winery_finder/features/map/map_screen.dart';
 import 'package:winery_finder/features/recents/recents_screen.dart';
@@ -6,7 +8,14 @@ import 'package:winery_finder/features/recents/recents_screen.dart';
 /// Casca da tela inicial com a navegação inferior entre as três abas
 /// do protótipo: Mapa, Favoritos e Recentes.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({
+    this.repository = const EmptyWineryRepository(),
+    this.location = const NoLocationProvider(),
+    super.key,
+  });
+
+  final WineryRepository repository;
+  final LocationProvider location;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -15,10 +24,10 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  static const List<Widget> _screens = <Widget>[
-    MapScreen(),
-    FavoritesScreen(),
-    RecentsScreen(),
+  late final List<Widget> _screens = <Widget>[
+    MapScreen(repository: widget.repository, location: widget.location),
+    const FavoritesScreen(),
+    const RecentsScreen(),
   ];
 
   @override
