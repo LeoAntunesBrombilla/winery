@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/winery.dart';
+import 'package:winery_finder/widgets/reservation_badge.dart';
 
 /// Ficha da vinícola. O cabeçalho fica fora da rolagem para que as
 /// informações de decisão (preço, reserva) apareçam sem rolar a tela.
@@ -20,6 +21,8 @@ class WineryDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(winery.city, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ReservationBadge(requiresReservation: winery.requiresReservation),
             const SizedBox(height: 12),
             Row(
               children: <Widget>[

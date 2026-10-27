@@ -9,6 +9,7 @@ Winery testWinery({
   double distanceKm = 12.4,
   double rating = 4.7,
   int tastingPriceCents = 8500,
+  bool requiresReservation = false,
 }) {
   return Winery(
     id: id,
@@ -18,5 +19,6 @@ Winery testWinery({
     distanceKm: distanceKm,
     rating: rating,
     tastingPriceCents: tastingPriceCents,
+    requiresReservation: requiresReservation,
   );
 }

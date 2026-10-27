@@ -32,4 +32,29 @@ void main() {
 
     expect(find.text('Degustação gratuita'), findsOneWidget);
   });
+
+  testWidgets('selo de reserva aparece sem rolar a tela', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WineryDetailScreen(winery: testWinery(requiresReservation: true)),
+      ),
+    );
+
+    final Finder badge = find.text('Reserva obrigatória');
+    expect(badge, findsOneWidget);
+    expect(find.byType(Scrollable), findsNothing);
+    final Rect screen =
+        Offset.zero & tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(screen.contains(tester.getBottomRight(badge)), isTrue);
+  });
+
+  testWidgets('mostra Sem necessidade de reserva', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(home: WineryDetailScreen(winery: testWinery())),
+    );
+
+    expect(find.text('Sem necessidade de reserva'), findsOneWidget);
+  });
 }

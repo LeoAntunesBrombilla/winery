@@ -21,6 +21,7 @@ class Winery {
     required this.distanceKm,
     required this.rating,
     required this.tastingPriceCents,
+    required this.requiresReservation,
   });
 
   final String id;
@@ -36,4 +37,7 @@ class Winery {
 
   /// Preço da degustação por pessoa, em centavos. Zero = gratuita.
   final int tastingPriceCents;
+
+  /// A visita exige reserva antecipada.
+  final bool requiresReservation;
 }
