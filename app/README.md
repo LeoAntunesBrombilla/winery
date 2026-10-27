@@ -82,6 +82,7 @@ lib/
   main_spike.dart            Ponto de entrada do spike de mapa e rota
   bootstrap.dart             Inicialização do Firebase
   app.dart                   MaterialApp e tema
+  catalog/                   Leitura/validação da planilha da carga inicial (US32)
   domain/                    Modelos e regras puras (sem Flutter/Firebase)
     winery.dart
     winery_filter.dart
@@ -92,7 +93,11 @@ lib/
     recents/                 Aba Recentes
     spike/                   Spike de mapa + link de rota (TT01)
   widgets/                   Componentes compartilhados
+tool/
+  import_wineries.dart       Carga inicial no Firestore — veja tool/catalog/README.md
+  catalog/vinicolas.csv      Planilha padrão das vinícolas
 test/
+  catalog/                   Testes da carga inicial
   domain/                    Testes unitários
   features/                  Testes de widget
 ```
