@@ -20,6 +20,7 @@ class Winery {
     required this.wineTypes,
     required this.distanceKm,
     required this.rating,
+    required this.tastingPriceCents,
   });
 
   final String id;
@@ -32,4 +33,7 @@ class Winery {
 
   /// Avaliação média de 0 a 5.
   final double rating;
+
+  /// Preço da degustação por pessoa, em centavos. Zero = gratuita.
+  final int tastingPriceCents;
 }
