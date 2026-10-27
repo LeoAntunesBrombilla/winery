@@ -1,0 +1,49 @@
+# Configuração do analisador e do linter.
+# Rodar localmente: `flutter analyze` (o CI usa `--fatal-infos`, então
+# qualquer aviso, mesmo informativo, falha a pipeline).
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # Promove para erro alguns avisos que costumam virar bug.
+    missing_required_param: error
+    missing_return: error
+    unused_import: error
+    unused_local_variable: error
+    dead_code: error
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # Estilo
+    prefer_single_quotes: true
+    always_declare_return_types: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    unnecessary_lambdas: true
+    unnecessary_parenthesis: true
+    sort_pub_dependencies: true
+    directives_ordering: true
+    # Segurança / correção
+    avoid_dynamic_calls: true
+    avoid_print: true
+    avoid_slow_async_io: true
+    cancel_subscriptions: true
+    close_sinks: true
+    only_throw_errors: true
+    unawaited_futures: true
+    # Flutter
+    use_key_in_widget_constructors: true
+    sized_box_for_whitespace: true
+    use_colored_box: true
+    use_decorated_box: true

@@ -37,6 +37,8 @@ Documentação da imersão, personas, mapas de empatia, storytelling e canvas do
 ## Estrutura do repositório
 
 ```
+app/                    App Flutter (esqueleto com lint e testes) — veja app/README.md
+.github/workflows/      CI: formatação, lint e testes do app a cada push/PR
 Winery Finder.dc.html   Protótipo (Claude Design) — abre com support.js
 ios-frame.jsx           Componente de moldura do dispositivo usado no protótipo
 winery-map.html         Mapa (Leaflet) embutido no protótipo
@@ -53,3 +55,4 @@ design-thinking/        Relatório de personas, mapas de empatia e canvas do pro
 - Canvas do projeto em formato de board, no padrão usado no Miro da equipe.
 - Definição da stack técnica (Figma + Flutter + Firebase) refletida no relatório e no canvas.
 - Ajuste dos participantes do canvas (PO, UX, Tech Lead, Pesquisa & marketing).
+- Esqueleto do app Flutter em `app/` (abas Mapa/Favoritos/Recentes, modelo de vinícola e filtros) com lint estrito, testes e pipeline de CI no GitHub Actions.
