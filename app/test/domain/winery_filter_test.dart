@@ -11,6 +11,7 @@ void main() {
     distanceKm: 12.4,
     rating: 4.7,
     tastingPriceCents: 0,
+    requiresReservation: false,
   );
   const Winery aurora = Winery(
     id: '2',
@@ -20,6 +21,7 @@ void main() {
     distanceKm: 3.2,
     rating: 4.3,
     tastingPriceCents: 0,
+    requiresReservation: false,
   );
   const Winery miolo = Winery(
     id: '3',
@@ -29,6 +31,7 @@ void main() {
     distanceKm: 0.65,
     rating: 4.8,
     tastingPriceCents: 0,
+    requiresReservation: false,
   );
   const List<Winery> all = <Winery>[valduga, aurora, miolo];
 
