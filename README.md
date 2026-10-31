@@ -8,13 +8,7 @@ O **Winery Finder** é uma plataforma desenvolvida em Flutter projetada para con
 1. [Visão Geral e Objetivos](#-visão-geral-e-objetivos)
 2. [Arquitetura e Módulos do Sistema](#-arquitetura-e-módulos-do-sistema)
 3. [Regras de Negócio e Permissões de Acesso](#-regras-de-negócio-e-permissões-de-acesso)
-4. [Funcionalidades Detalhadas](#-funcionalidades-detalhadas)
-   - [A. Autenticação e Dados Pessoais](#a-autenticação-e-dados-pessoais)
-   - [B. Mapa Interativo e Filtros por Vinho](#b-mapa-interativo-e-filtros-por-vinho)
-   - [C. Cadastro de Vinícolas e Referência de Criador](#c-cadastro-de-vinícolas-e-referência-de-criador)
-   - [D. Painel de Gestão de Produtos (Vinhos à Venda)](#d-painel-de-gestão-de-produtos-vinhos-à-venda)
-   - [E. Painel do Administrador](#e-painel-do-administrador)
-   - [F. Identidade Visual e Logotipo](#f-identidade-visual-e-logotipo)
+4. [📱 Detalhamento das Telas e Funcionalidades](#-detalhamento-das-telas-e-funcionalidades)
 5. [Modelagem de Dados (Domain)](#-modelagem-de-dados-domain)
 6. [Qualidade e Testes Automatizados](#-qualidade-e-testes-automatizados)
 7. [Como Executar e Subir para o GitHub](#-como-executar-e-subir-para-o-github)
@@ -76,47 +70,75 @@ lib/
 
 ---
 
-## ✨ Funcionalidades Detalhadas
+## 📱 Detalhamento das Telas e Funcionalidades
 
-### A. Autenticação e Dados Pessoais
-- **Cadastro Completo**: O formulário de criação de conta coleta:
-  - Foto de Perfil Pessoal (carregada do computador/dispositivo com pré-visualização).
-  - Nome Completo, CPF, Telefone/Celular e Endereço Completo.
-  - E-mail e Senha.
-- **Login Seguro**: Entrada por e-mail e senha com opção de mostrar/ocultar senha e botão de logout.
+### 1. Tela de Login (`LoginScreen`)
+- **Objetivo**: Garantir o acesso autenticado ao sistema.
+- **Campos**: E-mail e Senha (com funcionalidade de alternar visibilidade de senha).
+- **Design**: Sobreposição elegante sobre imagem de fundo de videira (`VineyardBackground`) e logotipo de cacho de uvas (`WineryLogo`).
+- **Ações**: Botão "Entrar" e atalho "Não tem uma conta? Cadastre-se".
 
-### B. Mapa Interativo e Filtros por Vinho
-- **Renderização de Mapa**: Utiliza `flutter_map` e OpenStreetMap com centralização inicial no Vale dos Vinhedos (Bento Gonçalves, RS).
-- **Busca em Tempo Real**: Filtro por texto (nome da vinícola ou cidade).
-- **Chips de Seleção de Vinhos**: Filtre simultaneamente por tipos (*Tinto, Branco, Espumante, Rosé*).
-- **Marcadores Interativos**: Ao tocar no marcador do mapa, o mapa foca na vinícola e abre o painel de detalhes.
+### 2. Tela de Cadastro de Usuário (`RegisterScreen`)
+- **Objetivo**: Registrar um novo usuário com dados pessoais completos.
+- **Campos**:
+  - Foto de Perfil Pessoal (carregada do computador/dispositivo com pré-visualização circular).
+  - Nome Completo, CPF, Telefone / Celular e Endereço Completo.
+  - E-mail, Senha e Confirmação de Senha.
+- **Validação**: Validação em tempo real de campos obrigatórios, confirmação de senha e e-mails duplicados.
 
-### C. Cadastro de Vinícolas e Referência de Criador
-- **Ordem do Formulário de Cadastro (`RegisterWineryDialog`)**:
-  1. **Logo da Vinícola (em 1º lugar)**: Botão para carregar arquivo direto do computador com pré-visualização em miniatura.
-  2. **Nome do Proprietário / Responsável (em 2º lugar)**.
-  3. Nome da Vinícola, Cidade, Endereço Completo, Distância, Avaliação, Sommelier e Uvas Cultivadas.
-  4. Galeria de Fotos do estabelecimento.
-- **Referência do Criador**: O e-mail do usuário criador é registrado na propriedade `creatorEmail` e exibido na ficha pública.
-
-### D. Painel de Gestão de Produtos (Vinhos à Venda)
-- **Painel da Vinícola (`WineryProductsPanel`)**: Acessível pelo botão "Painel de Produtos" na ficha da vinícola (restrito ao criador/admin).
+### 3. Tela Principal & Mapa Interativo (`MapScreen`)
+- **Objetivo**: Apresentar o mapa de vinícolas, busca, filtros e catálogo.
 - **Recursos**:
-  - **Postar Novo Vinho**: Nome, tipo, uva utilizada, safra, preço (R$), link de pagamento e foto do produto.
-  - **Alterar Preços e Fotos**: Formulário de edição rápida (`EditWineDialog`).
-  - **Inativar / Ativar**: Alternância de disponibilidade com badge visual (*Ativo = Verde / Inativo = Cinza*).
-  - **Excluir Produto**: Remoção de itens do catálogo.
-  - **Link de Pagamento Direct**: Botão "Comprar / Pagamento Direct" que direciona o comprador para o link de checkout do vendedor.
+  - **Renderização de Mapa**: Azulejos do OpenStreetMap com marcadores de vinícolas em tom vinho (`#722F37`).
+  - **Barra de Pesquisa**: Filtro por texto em tempo real para nome da vinícola ou cidade.
+  - **Chips de Tipos de Vinho**: Seleção múltipla para filtrar por *Tinto, Branco, Espumante, Rosé*.
+  - **Lista Inferior de Vinícolas**: Exibe distância formatada (m/km), cidade, avaliação (1 a 5 estrelas) e logo.
+  - **Botão de Coração**: Favoritar/desfavoritar vinícolas diretamente da lista ou no painel de detalhes.
+  - **Ficha de Detalhes da Vinícola**: Desliza ao selecionar uma vinícola, exibindo endereço completo, responsável, sommelier, uvas cultivadas, fotos e e-mail do criador.
+  - **Ações da Barra Superior (AppBar)**:
+    - Botão "Cadastrar Vinícola" (abre o formulário de cadastro).
+    - Ícone de escudo "Painel do Administrador" (visível estritamente para `admin@winery.com`).
+    - Botão "Sair da Conta" (Logout).
 
-### E. Painel do Administrador
-- **Acesso Exclusivo (`admin@winery.com`)**:
-  - **Aba Usuários Cadastrados**: Lista todos os usuários, suas fotos de perfil, CPF, telefone e permite ao admin editar dados ou remover usuários.
-  - **Aba Todas Contribuições**: Lista todas as vinícolas cadastradas na plataforma com a indicação de quem as criou.
+### 4. Formulário de Cadastro de Vinícola (`RegisterWineryDialog`)
+- **Objetivo**: Permitir o cadastro de novas vinícolas com informações completas.
+- **Ordem dos Campos**:
+  1. **Logo da Vinícola (em 1º lugar)**: Seleção de arquivo de logo do computador/dispositivo com visualização prévia.
+  2. **Nome do Proprietário / Responsável (em 2º lugar)**: Campo obrigatório para identificação do gestor.
+  3. Nome da Vinícola, Cidade/Região e Endereço Completo.
+  4. Distância estimada (km) e Avaliação.
+  5. Sommelier e Uvas Cultivadas (*separadas por vírgula*).
+  6. **Fotos da Vinícola**: Seleção de múltiplas fotos diretamente do computador com carrossel de pré-visualização.
+  7. Chips de Seleção dos Tipos de Vinho produzidos.
+- **Associação**: Vincula automaticamente o e-mail do usuário logado na propriedade `creatorEmail`.
 
-### F. Identidade Visual e Logotipo
-- **Tema Vinho (Burgundy `#722F37`)**: Paleta de cores em conformidade com o Material 3.
-- **Logotipo Cacho de Uvas (`WineryLogo`)**: Desenhado com bagas circulares, cabinho e folha de parreira em verde sutil.
-- **Fundo de Videira (`VineyardBackground`)**: Imagem de fundo de vinhedo com sobreposição escura em gradiente vinho.
+### 5. Painel de Gestão de Produtos da Vinícola (`WineryProductsPanel`)
+- **Objetivo**: Gerenciar os vinhos e preços à venda por vinícola.
+- **Controle de Acesso**: Exclusivo para a vinícola criadora responsável ou para o administrador master.
+- **Recursos**:
+  - **Postar Novo Vinho**: Abre o `RegisterWineDialog`.
+  - **Inativar / Ativar**: Alternar visibilidade pública do vinho (*Ativo = Verde / Inativo = Cinza*).
+  - **Editar / Alterar Preço**: Edição de dados e preços via `EditWineDialog`.
+  - **Excluir Produto**: Remoção permanente do produto.
+
+### 6. Diálogos de Postagem e Edição de Vinhos (`RegisterWineDialog` / `EditWineDialog`)
+- **Objetivo**: Postar ou atualizar vinhos e preços.
+- **Campos**:
+  - Card em destaque com o nome da vinícola vinculada.
+  - Nome do Vinho, Tipo de Vinho, Uva Utilizada e Safra.
+  - **Preço de Venda (R\$)** e **Link de Pagamento Direct** (*MercadoPago, WhatsApp, Loja Online*).
+  - Foto do Vinho (carregamento direto do computador/dispositivo).
+  - Breve Descrição / Notas de Degustação.
+
+### 7. Painel do Administrador (`AdminDashboardScreen`)
+- **Objetivo**: Controle centralizado da plataforma (Exclusivo para `admin@winery.com`).
+- **Abas**:
+  - **Aba 1 (Usuários Cadastrados)**: Lista todos os usuários cadastrados, com suas fotos de perfil, CPF, telefone e e-mail. Permite ao admin abrir o `EditUserDialog` para alterar qualquer dado do usuário ou excluir contas.
+  - **Aba 2 (Todas Contribuições)**: Lista unificada de todas as vinícolas cadastradas com indicação do criador.
+
+### 8. Tela de Vinícolas Favoritas (`FavoritesScreen`)
+- **Objetivo**: Exibir e gerenciar vinícolas favoritadas pelo usuário.
+- **Recursos**: Lista todas as vinícolas marcadas com o ícone de coração vermelho, permitindo desfavoritar com um toque.
 
 ---
 
