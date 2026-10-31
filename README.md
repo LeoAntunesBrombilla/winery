@@ -193,10 +193,6 @@ flutter analyze
 flutter run
 ```
 
-### Credenciais Padrão do Administrador
-- **E-mail**: `admin@winery.com`
-- **Senha**: `Winery123@@@!!!`
-
 ### Subindo para o GitHub (`robsonsp29`)
 1. Crie um repositório no seu GitHub: [https://github.com/new](https://github.com/new) com o nome `winery`.
 2. No terminal do Android Studio, execute:
