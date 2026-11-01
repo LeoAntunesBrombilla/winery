@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:winery_finder/domain/user_account.dart';
 
-/// Repositório de autenticação de usuários (suporta cadastro, edição pelo admin e sessão).
+/// Repositório de autenticação de usuários (suporta cadastro, edição pelo admin, bloqueio/desbloqueio e sessão).
 class AuthRepository extends ChangeNotifier {
   AuthRepository._();
   static final AuthRepository instance = AuthRepository._();
@@ -68,13 +68,29 @@ class AuthRepository extends ChangeNotifier {
     return true;
   }
 
+  /// Alterna o status de bloqueio do usuário (Bloquear / Desbloquear).
+  void toggleUserBlockStatus(String id) {
+    final index = _registeredUsers.indexWhere((u) => u.id == id);
+    if (index != -1 && _registeredUsers[index].email != 'admin@winery.com') {
+      final user = _registeredUsers[index];
+      _registeredUsers[index] = user.copyWith(isBlocked: !user.isBlocked);
+      if (_currentUser?.id == id && _registeredUsers[index].isBlocked) {
+        _currentUser = null; // Desloga usuário se for bloqueado
+      }
+      notifyListeners();
+    }
+  }
+
   /// Permite ao administrador remover um usuário cadastrado.
   void deleteUser(String id) {
     _registeredUsers.removeWhere((u) => u.id == id && u.email != 'admin@winery.com');
+    if (_currentUser?.id == id) {
+      _currentUser = null;
+    }
     notifyListeners();
   }
 
-  /// Realiza o login com email e senha.
+  /// Realiza o login com email e senha (impede login se o usuário estiver bloqueado).
   bool login({
     required String email,
     required String password,
@@ -83,6 +99,7 @@ class AuthRepository extends ChangeNotifier {
       final user = _registeredUsers.firstWhere(
         (u) => u.email.toLowerCase() == email.trim().toLowerCase() && u.password == password,
       );
+      if (user.isBlocked) return false; // Bloqueado
       _currentUser = user;
       notifyListeners();
       return true;

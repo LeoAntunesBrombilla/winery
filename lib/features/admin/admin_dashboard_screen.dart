@@ -5,7 +5,7 @@ import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
 import 'package:winery_finder/features/admin/edit_user_dialog.dart';
 
-/// Painel do Administrador (exclusivo para admin@winery.com).
+/// Painel do Administrador (exclusivo para admin@winery.com): alterar cadastro, bloquear ou excluir usuários.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -56,7 +56,7 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            // Aba 1: Usuários Cadastrados (com opção de editar)
+            // Aba 1: Usuários Cadastrados (Editar, Bloquear/Desbloquear e Excluir)
             AnimatedBuilder(
               animation: AuthRepository.instance,
               builder: (context, _) {
@@ -80,15 +80,46 @@ class AdminDashboardScreen extends StatelessWidget {
                               ? Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U')
                               : null,
                         ),
-                        title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${user.email}\nCPF: ${user.cpf.isNotEmpty ? user.cpf : "Não informado"} | Tel: ${user.phone.isNotEmpty ? user.phone : "Não informado"}'),
+                        title: Row(
+                          children: [
+                            Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(width: 8),
+                            if (user.isBlocked)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Bloqueado',
+                                  style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold),
+                                ),
+                              )
+                            else if (user.email == 'admin@winery.com')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Admin',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                          ],
+                        ),
+                        subtitle: Text(
+                          '${user.email}\nCPF: ${user.cpf.isNotEmpty ? user.cpf : "Não informado"} | Tel: ${user.phone.isNotEmpty ? user.phone : "Não informado"}',
+                        ),
                         isThreeLine: true,
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit_outlined),
-                              tooltip: 'Editar Usuário',
+                              tooltip: 'Alterar Cadastro',
                               onPressed: () {
                                 showDialog<void>(
                                   context: context,
@@ -96,17 +127,37 @@ class AdminDashboardScreen extends StatelessWidget {
                                 );
                               },
                             ),
-                            if (user.email != 'admin@winery.com')
+                            if (user.email != 'admin@winery.com') ...[
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                tooltip: 'Excluir Usuário',
+                                icon: Icon(
+                                  user.isBlocked ? Icons.lock_open_outlined : Icons.block_outlined,
+                                  color: user.isBlocked ? Colors.green : Colors.orangeAccent,
+                                ),
+                                tooltip: user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário',
                                 onPressed: () {
-                                  AuthRepository.instance.deleteUser(user.id);
+                                  AuthRepository.instance.toggleUserBlockStatus(user.id);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Usuário removido.')),
+                                    SnackBar(
+                                      content: Text(
+                                        user.isBlocked
+                                            ? 'Usuário "${user.name}" foi desbloqueado.'
+                                            : 'Usuário "${user.name}" foi bloqueado pelo administrador.',
+                                      ),
+                                    ),
                                   );
                                 },
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                tooltip: 'Excluir Cadastro',
+                                onPressed: () {
+                                  AuthRepository.instance.deleteUser(user.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Usuário "${user.name}" foi excluído.')),
+                                  );
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       ),

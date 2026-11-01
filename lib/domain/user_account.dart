@@ -1,4 +1,4 @@
-/// Modelo de usuário com dados pessoais completos para o sistema de autenticação.
+/// Modelo de usuário com dados pessoais completos e status de bloqueio.
 class UserAccount {
   const UserAccount({
     required this.id,
@@ -9,6 +9,7 @@ class UserAccount {
     this.cpf = '',
     this.phone = '',
     this.address = '',
+    this.isBlocked = false,
   });
 
   final String id;
@@ -19,6 +20,7 @@ class UserAccount {
   final String cpf;
   final String phone;
   final String address;
+  final bool isBlocked;
 
   UserAccount copyWith({
     String? id,
@@ -29,6 +31,7 @@ class UserAccount {
     String? cpf,
     String? phone,
     String? address,
+    bool? isBlocked,
   }) {
     return UserAccount(
       id: id ?? this.id,
@@ -39,6 +42,7 @@ class UserAccount {
       cpf: cpf ?? this.cpf,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      isBlocked: isBlocked ?? this.isBlocked,
     );
   }
 }
