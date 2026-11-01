@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Logotipo personalizado do Winery Finder em formato de cacho de uvas douradas com folha sobre fundo vinho.
+/// Logotipo personalizado do Winery Finder em formato de cacho de uvas vermelhas com folha sobre fundo escuro.
 class WineryLogo extends StatelessWidget {
   const WineryLogo({
     this.size = 40.0,
@@ -13,7 +13,7 @@ class WineryLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logoBgColor = color ?? const Color(0xFF722F37); // Cor Vinho clássico (Burgundy)
+    final logoBgColor = color ?? const Color(0xFF1A0F12); // Fundo escuro elegante
 
     return SizedBox(
       width: size,
@@ -21,12 +21,12 @@ class WineryLogo extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Fundo circular vinho com borda dourada sutil
+          // Fundo circular com borda dourada sutil
           Container(
             decoration: BoxDecoration(
               color: logoBgColor,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFF5C350), width: size > 40 ? 2.5 : 1.5),
+              border: Border.all(color: const Color(0xFFD4AF37), width: size > 40 ? 2.5 : 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.3),
@@ -36,7 +36,7 @@ class WineryLogo extends StatelessWidget {
               ],
             ),
           ),
-          // Ícone em formato de cacho de uvas idêntico ao ícone do aplicativo
+          // Ícone em formato de cacho de uvas vermelhas idêntico ao ícone do aplicativo
           CustomPaint(
             size: Size(size * 0.65, size * 0.65),
             painter: GrapeLogoPainter(),
@@ -50,19 +50,19 @@ class WineryLogo extends StatelessWidget {
 class GrapeLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Cor das bagas de uva (Dourado/Âmbar Vibrante)
+    // Cor das bagas de uva (Uva Vermelha Rubi / Burgundy)
     final berryPaint = Paint()
-      ..color = const Color(0xFFF5C350)
+      ..color = const Color(0xFFC81E3C)
       ..style = PaintingStyle.fill;
 
     // Cor da folha da parreira (Verde Folha)
     final leafPaint = Paint()
-      ..color = const Color(0xFF4A7C59)
+      ..color = const Color(0xFF388E3C)
       ..style = PaintingStyle.fill;
 
     // Cor do cabinho
     final stemPaint = Paint()
-      ..color = const Color(0xFFF5C350)
+      ..color = const Color(0xFFC81E3C)
       ..strokeWidth = 2.2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -70,7 +70,7 @@ class GrapeLogoPainter extends CustomPainter {
     final center = size.width / 2;
     final radius = size.width * 0.085;
 
-    // Desenha o cacho de uvas (bagas em formato triangular)
+    // Desenha o cacho de uvas vermelhas (bagas em formato triangular)
     // Linha 1 (topo - 2 bagas)
     canvas.drawCircle(Offset(center - radius * 0.8, size.height * 0.38), radius, berryPaint);
     canvas.drawCircle(Offset(center + radius * 0.8, size.height * 0.38), radius, berryPaint);
