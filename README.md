@@ -9,9 +9,10 @@ O **Winery Finder** é uma plataforma desenvolvida em Flutter projetada para con
 2. [Arquitetura e Módulos do Sistema](#-arquitetura-e-módulos-do-sistema)
 3. [Regras de Negócio e Permissões de Acesso](#-regras-de-negócio-e-permissões-de-acesso)
 4. [📱 Detalhamento das Telas e Funcionalidades](#-detalhamento-das-telas-e-funcionalidades)
-5. [Modelagem de Dados (Domain)](#-modelagem-de-dados-domain)
-6. [Qualidade e Testes Automatizados](#-qualidade-e-testes-automatizados)
-7. [Como Executar e Subir para o GitHub](#-como-executar-e-subir-para-o-github)
+5. [📖 Tutorial Passo a Passo do Usuário](#-tutorial-passo-a-passo-do-usuário)
+6. [Modelagem de Dados (Domain)](#-modelagem-de-dados-domain)
+7. [Qualidade e Testes Automatizados](#-qualidade-e-testes-automatizados)
+8. [Como Executar e Subir para o GitHub](#-como-executar-e-subir-para-o-github)
 
 ---
 
@@ -139,6 +140,48 @@ lib/
 ### 8. Tela de Vinícolas Favoritas (`FavoritesScreen`)
 - **Objetivo**: Exibir e gerenciar vinícolas favoritadas pelo usuário.
 - **Recursos**: Lista todas as vinícolas marcadas com o ícone de coração vermelho, permitindo desfavoritar com um toque.
+
+---
+
+## 📖 Tutorial Passo a Passo do Usuário
+
+### Passo 1: Criando uma Conta e Fazendo Login
+1. Abra o aplicativo na tela de **Login**.
+2. Caso ainda não possua conta, clique em **"Não tem uma conta? Cadastre-se"**.
+3. Na tela de **Cadastro de Usuário**:
+   - Toque no ícone de câmera para selecionar sua **Foto de Perfil** direto do computador ou galeria.
+   - Preencha seu **Nome Completo**, **CPF**, **Telefone**, **Endereço Completo**, **E-mail** e **Senha**.
+   - Clique no botão **"Cadastrar"**.
+4. Retorne à tela de Login, insira seu e-mail e senha cadastrados e clique em **"Entrar"**.
+
+### Passo 2: Explorando o Mapa e Vinícolas
+1. Ao entrar, a tela principal abre na aba **Mapa**, exibindo o mapa de vinícolas e a lista de locais próximos.
+2. Digite o nome de uma cidade ou vinícola na barra de pesquisa (ex: *Bento Gonçalves*, *Miolo*, *Valduga*).
+3. Selecione os chips de filtro (*Tinto, Branco, Espumante, Rosé*) para filtrar as vinícolas no mapa em tempo real.
+4. Toque no ícone de **Coração** de qualquer vinícola para adicioná-la aos seus **Favoritos**.
+
+### Passo 3: Cadastrando uma Nova Vinícola
+1. Toque no botão flutuante **"+ Cadastrar Vinícola"** (ou no ícone de localização no topo da tela).
+2. No formulário:
+   - Clique em **"Escolher Logo"** para selecionar o logo da vinícola direto do seu computador.
+   - Digite o **Nome do Proprietário / Responsável** no campo logo abaixo.
+   - Preencha o nome da vinícola, cidade, endereço, sommelier, uvas cultivadas e selecione fotos da vinícola.
+3. Clique em **"Cadastrar"**. A vinícola aparecerá imediatamente no mapa vinculada ao seu e-mail de usuário!
+
+### Passo 4: Postando e Gerenciando Vinhos para Venda
+1. Toque na vinícola que você cadastrou para abrir o painel de detalhes.
+2. Como você é o criador responsável, clique no botão **"Painel de Produtos"**.
+3. No painel de gestão da vinícola:
+   - Clique em **"Cadastrar Produto"** para postar um vinho à venda.
+   - Informe o nome do vinho, uva utilizada, safra, preço em R\$, insira o **Link de Pagamento** (*MercadoPago/WhatsApp*) e selecione a **Foto do Vinho** do computador.
+   - Clique em **"Postar Vinho"**.
+4. No painel de gestão, você pode a qualquer momento **Alterar Preço**, **Inativar/Ativar** o produto para ocultá-lo do público ou **Excluir**.
+
+### Passo 5: Acessando o Painel do Administrador (Exclusivo `admin@winery.com`)
+1. Faça login utilizando a conta master de administrador (`admin@winery.com`).
+2. Um ícone de escudo aparecerá no topo do mapa. Toque nele para abrir o **Painel do Administrador**.
+3. Na **Aba Usuários Cadastrados**, visualize a foto, CPF, telefone e e-mail de todos os usuários, podendo editar seus dados ou excluir contas.
+4. Na **Aba Todas Contribuições**, acompanhe todas as vinícolas cadastradas e quem as criou na plataforma.
 
 ---
 
