@@ -497,4 +497,17 @@ class WineryRepository extends ChangeNotifier {
     _wineries.insert(0, winery);
     notifyListeners();
   }
+
+  void updateWinery(Winery winery) {
+    final index = _wineries.indexWhere((w) => w.id == winery.id);
+    if (index != -1) {
+      _wineries[index] = winery;
+      notifyListeners();
+    }
+  }
+
+  void deleteWinery(String wineryId) {
+    _wineries.removeWhere((w) => w.id == wineryId);
+    notifyListeners();
+  }
 }

@@ -9,11 +9,12 @@ import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
 import 'package:winery_finder/features/admin/admin_dashboard_screen.dart';
+import 'package:winery_finder/features/map/edit_winery_dialog.dart';
 import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, lista, detalhes e vinhos à venda.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, rota ("Como Chegar"), lista, detalhes, vinhos à venda e gestão.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -22,10 +23,46 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  static const LatLng _userOrigin = LatLng(-29.1683, -51.5204); // Ponto de partida do usuário (Vale dos Vinhedos)
+
   String _searchQuery = '';
   final Set<WineType> _selectedTypes = <WineType>{};
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
+  Winery? _routeWinery; // Vinícola com rota ativa
+
+  void _drawRouteTo(Winery winery) {
+    setState(() {
+      _routeWinery = winery;
+      _selectedWinery = winery;
+    });
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    final bounds = LatLngBounds.fromPoints([
+      _userOrigin,
+      LatLng(winery.latitude, winery.longitude),
+    ]);
+
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(60.0),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Rota para "${winery.name}" (${WineryFilter.formatDistance(winery.distanceKm)})'),
+        action: SnackBarAction(
+          label: 'Limpar Rota',
+          onPressed: () => setState(() => _routeWinery = null),
+        ),
+      ),
+    );
+  }
 
   void _showWineryDetails(Winery winery) {
     setState(() => _selectedWinery = winery);
@@ -40,7 +77,7 @@ class _MapScreenState extends State<MapScreen> {
         final bool canModify = currentUserEmail == winery.creatorEmail || currentUserEmail == 'admin@winery.com';
 
         return DraggableScrollableSheet(
-          initialChildSize: 0.65,
+          initialChildSize: 0.7,
           minChildSize: 0.3,
           maxChildSize: 0.9,
           expand: false,
@@ -129,7 +166,48 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      // Botão "Como Chegar" em destaque no topo da ficha
+                      SizedBox(
+                        width: double.infinity,
+                        height: 44,
+                        child: FilledButton.icon(
+                          onPressed: () => _drawRouteTo(winery),
+                          icon: const Icon(Icons.directions, size: 20),
+                          label: const Text('Como Chegar (Ver Rota no Mapa)', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
                       const Divider(height: 24),
+                      if (canModify) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                showDialog<void>(
+                                  context: context,
+                                  builder: (_) => EditWineryDialog(winery: winery),
+                                );
+                              },
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('Editar Vinícola'),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent),
+                              tooltip: 'Excluir Vinícola',
+                              onPressed: () {
+                                WineryRepository.instance.deleteWinery(winery.id);
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Vinícola "${winery.name}" foi excluída.')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       if (winery.address.isNotEmpty) ...[
                         Row(
                           children: [
@@ -235,7 +313,6 @@ class _MapScreenState extends State<MapScreen> {
                                     Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // Foto do vinho
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(8),
                                           child: wine.imageUrl.isNotEmpty
@@ -478,42 +555,114 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View
+                  // Map View com Rota e Banners
                   Expanded(
                     flex: 3,
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: const MapOptions(
-                        initialCenter: LatLng(-29.1683, -51.5204), // Vale dos Vinhedos
-                        initialZoom: 11.5,
-                      ),
+                    child: Stack(
                       children: [
-                        TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.winery.winery_finder',
+                        FlutterMap(
+                          mapController: _mapController,
+                          options: const MapOptions(
+                            initialCenter: _userOrigin, // Vale dos Vinhedos
+                            initialZoom: 11.5,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.winery.winery_finder',
+                            ),
+                            // Linha de Rota ("Como Chegar")
+                            if (_routeWinery != null)
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: [
+                                      _userOrigin,
+                                      LatLng(_routeWinery!.latitude, _routeWinery!.longitude),
+                                    ],
+                                    strokeWidth: 5.0,
+                                    color: const Color(0xFF722F37), // Cor Vinho
+                                  ),
+                                ],
+                              ),
+                            MarkerLayer(
+                              markers: [
+                                // Marcador do Usuário/Partida
+                                if (_routeWinery != null)
+                                  const Marker(
+                                    point: _userOrigin,
+                                    width: 40,
+                                    height: 40,
+                                    child: Icon(Icons.my_location, size: 34, color: Colors.blueAccent),
+                                  ),
+                                ...filteredWineries.map((winery) {
+                                  final isSelected = _selectedWinery?.id == winery.id;
+                                  final isRouteTarget = _routeWinery?.id == winery.id;
+                                  return Marker(
+                                    point: LatLng(winery.latitude, winery.longitude),
+                                    width: 40,
+                                    height: 40,
+                                    child: GestureDetector(
+                                      onTap: () => _showWineryDetails(winery),
+                                      child: Icon(
+                                        Icons.location_on,
+                                        size: isSelected || isRouteTarget ? 46 : 36,
+                                        color: isRouteTarget
+                                            ? Colors.greenAccent
+                                            : (isSelected ? Colors.amber : const Color(0xFF722F37)),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ],
                         ),
-                        MarkerLayer(
-                          markers: filteredWineries.map((winery) {
-                            final isSelected = _selectedWinery?.id == winery.id;
-                            return Marker(
-                              point: LatLng(winery.latitude, winery.longitude),
-                              width: 40,
-                              height: 40,
-                              child: GestureDetector(
-                                onTap: () => _showWineryDetails(winery),
-                                child: Icon(
-                                  Icons.location_on,
-                                  size: isSelected ? 46 : 36,
-                                  color: isSelected ? Colors.amber : const Color(0xFF722F37),
+                        // Card/Banner de Rota Ativa
+                        if (_routeWinery != null)
+                          Positioned(
+                            top: 10,
+                            left: 10,
+                            right: 10,
+                            child: Card(
+                              elevation: 6,
+                              color: theme.colorScheme.surface,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.directions, color: Color(0xFF722F37), size: 28),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Rota para: ${_routeWinery!.name}',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                          ),
+                                          Text(
+                                            'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)}',
+                                            style: TextStyle(color: theme.colorScheme.primary, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.close, size: 20),
+                                      tooltip: 'Limpar Rota',
+                                      onPressed: () => setState(() => _routeWinery = null),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          }).toList(),
-                        ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  // Wineries List View
+                  // Wineries List View com botão "Como Chegar"
                   Expanded(
                     flex: 2,
                     child: DecoratedBox(
@@ -573,11 +722,17 @@ class _MapScreenState extends State<MapScreen> {
                                                   )
                                                 : const Icon(Icons.wine_bar),
                                           ),
-                                          title: Text(winery.name),
+                                          title: Text(winery.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                                           subtitle: Text('${winery.city} • ${WineryFilter.formatDistance(winery.distanceKm)}'),
                                           trailing: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              // Botão "Como Chegar" na lista
+                                              IconButton(
+                                                icon: const Icon(Icons.directions_outlined, color: Color(0xFF722F37)),
+                                                tooltip: 'Como Chegar',
+                                                onPressed: () => _drawRouteTo(winery),
+                                              ),
                                               AnimatedBuilder(
                                                 animation: FavoritesRepository.instance,
                                                 builder: (context, _) {
@@ -594,9 +749,6 @@ class _MapScreenState extends State<MapScreen> {
                                                   );
                                                 },
                                               ),
-                                              const Icon(Icons.star, size: 16, color: Colors.amber),
-                                              const SizedBox(width: 4),
-                                              Text(winery.rating.toStringAsFixed(1)),
                                             ],
                                           ),
                                           onTap: () => _showWineryDetails(winery),
