@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:winery_finder/data/auth_repository.dart';
 import 'package:winery_finder/data/favorites_repository.dart';
 import 'package:winery_finder/data/wine_repository.dart';
@@ -14,7 +15,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, rota ("Como Chegar"), lista, detalhes, vinhos à venda e gestão.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, rota ("Como Chegar pelo Google Maps"), lista, detalhes e vinhos.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -37,10 +38,6 @@ class _MapScreenState extends State<MapScreen> {
       _selectedWinery = winery;
     });
 
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-
     final bounds = LatLngBounds.fromPoints([
       _userOrigin,
       LatLng(winery.latitude, winery.longitude),
@@ -52,16 +49,36 @@ class _MapScreenState extends State<MapScreen> {
         padding: const EdgeInsets.all(60.0),
       ),
     );
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Rota para "${winery.name}" (${WineryFilter.formatDistance(winery.distanceKm)})'),
-        action: SnackBarAction(
-          label: 'Limpar Rota',
-          onPressed: () => setState(() => _routeWinery = null),
-        ),
-      ),
+  /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
+  Future<void> _openGoogleMapsRoute(Winery winery) async {
+    _drawRouteTo(winery);
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    final String destinationName = Uri.encodeComponent('${winery.name}, ${winery.city}');
+    final Uri googleMapsUri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${winery.latitude},${winery.longitude}&destination_place_id=$destinationName&travelmode=driving',
     );
+
+    try {
+      if (await canLaunchUrl(googleMapsUri)) {
+        await launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(googleMapsUri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Navegação no Google Maps para "${winery.name}" (${WineryFilter.formatDistance(winery.distanceKm)})'),
+          ),
+        );
+      }
+    }
   }
 
   void _showWineryDetails(Winery winery) {
@@ -167,14 +184,17 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Botão "Como Chegar" em destaque no topo da ficha
+                      // Botão "Como Chegar pelo Google Maps"
                       SizedBox(
                         width: double.infinity,
-                        height: 44,
+                        height: 46,
                         child: FilledButton.icon(
-                          onPressed: () => _drawRouteTo(winery),
-                          icon: const Icon(Icons.directions, size: 20),
-                          label: const Text('Como Chegar (Ver Rota no Mapa)', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () => _openGoogleMapsRoute(winery),
+                          icon: const Icon(Icons.map, size: 22),
+                          label: const Text(
+                            'Como Chegar (Abrir Rota no Google Maps)',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
                         ),
                       ),
                       const Divider(height: 24),
@@ -618,7 +638,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Rota Ativa
+                        // Card/Banner de Rota Ativa com atalho para Google Maps
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
@@ -639,15 +659,20 @@ class _MapScreenState extends State<MapScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            'Rota para: ${_routeWinery!.name}',
+                                            'Rota: ${_routeWinery!.name}',
                                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                           ),
                                           Text(
-                                            'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)}',
+                                            'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)} • Google Maps',
                                             style: TextStyle(color: theme.colorScheme.primary, fontSize: 12),
                                           ),
                                         ],
                                       ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.map_outlined, color: Colors.blueAccent),
+                                      tooltip: 'Abrir no Google Maps',
+                                      onPressed: () => _openGoogleMapsRoute(_routeWinery!),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.close, size: 20),
@@ -662,7 +687,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Wineries List View com botão "Como Chegar"
+                  // Wineries List View com botão "Como Chegar pelo Google Maps"
                   Expanded(
                     flex: 2,
                     child: DecoratedBox(
@@ -727,11 +752,11 @@ class _MapScreenState extends State<MapScreen> {
                                           trailing: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              // Botão "Como Chegar" na lista
+                                              // Botão "Como Chegar pelo Google Maps"
                                               IconButton(
                                                 icon: const Icon(Icons.directions_outlined, color: Color(0xFF722F37)),
-                                                tooltip: 'Como Chegar',
-                                                onPressed: () => _drawRouteTo(winery),
+                                                tooltip: 'Como Chegar no Google Maps',
+                                                onPressed: () => _openGoogleMapsRoute(winery),
                                               ),
                                               AnimatedBuilder(
                                                 animation: FavoritesRepository.instance,
