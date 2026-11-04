@@ -5,6 +5,7 @@ import 'package:winery_finder/app.dart';
 import 'package:winery_finder/bootstrap.dart';
 import 'package:winery_finder/data/favorites_store.dart';
 import 'package:winery_finder/data/location_provider.dart';
+import 'package:winery_finder/data/recents_store.dart';
 import 'package:winery_finder/data/winery_repository.dart';
 
 Future<void> main() async {
@@ -18,6 +19,7 @@ Future<void> main() async {
           : const EmptyWineryRepository(),
       location: const GeolocatorLocationProvider(),
       favorites: FavoritesStore.fromPreferences(preferences),
+      recents: RecentsStore.fromPreferences(preferences),
     ),
   );
 }

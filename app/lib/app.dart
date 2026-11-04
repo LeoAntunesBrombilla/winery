@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:winery_finder/app_scope.dart';
 import 'package:winery_finder/data/favorites_store.dart';
 import 'package:winery_finder/data/location_provider.dart';
+import 'package:winery_finder/data/recents_store.dart';
 import 'package:winery_finder/data/winery_catalog.dart';
 import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/features/home/home_shell.dart';
@@ -12,6 +13,7 @@ class WineryFinderApp extends StatefulWidget {
     this.repository = const EmptyWineryRepository(),
     this.location = const NoLocationProvider(),
     this.favorites,
+    this.recents,
     super.key,
   });
 
@@ -21,12 +23,16 @@ class WineryFinderApp extends StatefulWidget {
   /// Favoritos salvos no aparelho; sem valor, ficam só em memória.
   final FavoritesStore? favorites;
 
+  /// Histórico salvo no aparelho; sem valor, fica só em memória.
+  final RecentsStore? recents;
+
   @override
   State<WineryFinderApp> createState() => _WineryFinderAppState();
 }
 
 class _WineryFinderAppState extends State<WineryFinderApp> {
   late final FavoritesStore _favorites = widget.favorites ?? FavoritesStore();
+  late final RecentsStore _recents = widget.recents ?? RecentsStore();
   late final WineryCatalog _catalog = WineryCatalog(
     repository: widget.repository,
     location: widget.location,
@@ -43,6 +49,7 @@ class _WineryFinderAppState extends State<WineryFinderApp> {
     return AppScope(
       catalog: _catalog,
       favorites: _favorites,
+      recents: _recents,
       child: MaterialApp(
         title: 'Winery Finder',
         debugShowCheckedModeBanner: false,
