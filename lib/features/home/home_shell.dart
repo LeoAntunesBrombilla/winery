@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:winery_finder/features/blog/blog_screen.dart';
+import 'package:winery_finder/features/blog/sommeliers_screen.dart';
 import 'package:winery_finder/features/favorites/favorites_screen.dart';
 import 'package:winery_finder/features/map/map_screen.dart';
-import 'package:winery_finder/features/recents/recents_screen.dart';
 
-/// Casca da tela inicial com a navegação inferior entre as três abas
-/// do protótipo: Mapa, Favoritos e Recentes.
+/// Casca da tela inicial com navegação inferior entre as abas:
+/// Mapa / Vinícolas, Blog Coletivo, Sommeliers Profissionais e Favoritos.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -17,8 +18,9 @@ class _HomeShellState extends State<HomeShell> {
 
   static const List<Widget> _screens = <Widget>[
     MapScreen(),
+    BlogScreen(),
+    SommeliersScreen(),
     FavoritesScreen(),
-    RecentsScreen(),
   ];
 
   @override
@@ -29,12 +31,26 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         onDestinationSelected: (int value) => setState(() => _index = value),
         destinations: const <NavigationDestination>[
-          NavigationDestination(icon: Icon(Icons.map_outlined), label: 'Mapa'),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'Mapa',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.article_outlined),
+            selectedIcon: Icon(Icons.article),
+            label: 'Blog Coletivo',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Sommeliers',
+          ),
           NavigationDestination(
             icon: Icon(Icons.favorite_outline),
+            selectedIcon: Icon(Icons.favorite),
             label: 'Favoritos',
           ),
-          NavigationDestination(icon: Icon(Icons.history), label: 'Recentes'),
         ],
       ),
     );

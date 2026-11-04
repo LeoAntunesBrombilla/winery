@@ -15,18 +15,19 @@ void main() {
     expect(find.text('Winery Finder'), findsOneWidget);
   });
 
-  testWidgets('navega para Favoritos e Recentes', (WidgetTester tester) async {
+  testWidgets('navega para Blog Coletivo, Sommeliers e Favoritos', (WidgetTester tester) async {
     await tester.pumpWidget(const WineryFinderApp());
+
+    await tester.tap(find.text('Blog Coletivo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Blog Coletivo de Sommeliers'), findsOneWidget);
+
+    await tester.tap(find.text('Sommeliers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sommeliers Profissionais'), findsOneWidget);
 
     await tester.tap(find.text('Favoritos'));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Você ainda não salvou nenhuma vinícola.'),
-      findsOneWidget,
-    );
-
-    await tester.tap(find.text('Recentes'));
-    await tester.pumpAndSettle();
-    expect(find.text('Nenhuma vinícola visitada ainda.'), findsOneWidget);
+    expect(find.text('Você ainda não salvou nenhuma vinícola.'), findsOneWidget);
   });
 }

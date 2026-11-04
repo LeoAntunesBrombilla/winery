@@ -2,10 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:winery_finder/data/auth_repository.dart';
+import 'package:winery_finder/domain/user_account.dart';
 import 'package:winery_finder/widgets/vineyard_background.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Tela de Cadastro de novo usuário com dados pessoais completos e foto de perfil sobre fundo de videira.
+/// Tela de Cadastro de novo usuário com dados pessoais, seleção de Perfil (Vinícola, Sommelier, Admirador) e foto.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -22,6 +23,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+
+  // Campos específicos do Sommelier
+  final TextEditingController _historyController = TextEditingController();
+  final TextEditingController _educationController = TextEditingController();
+  final TextEditingController _contactInfoController = TextEditingController();
+
+  UserRole _selectedRole = UserRole.admirer;
   bool _obscurePassword = true;
 
   final ImagePicker _picker = ImagePicker();
@@ -37,6 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _historyController.dispose();
+    _educationController.dispose();
+    _contactInfoController.dispose();
     super.dispose();
   }
 
@@ -65,16 +76,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       name: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
+      role: _selectedRole,
       photoUrl: _photoPath ?? '',
       cpf: _cpfController.text,
       phone: _phoneController.text,
       address: _addressController.text,
+      professionalHistory: _historyController.text,
+      education: _educationController.text,
+      contactInfo: _contactInfoController.text,
     );
 
     if (success) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Conta criada com sucesso! Faça login.')),
+        SnackBar(content: Text('Conta de ${_selectedRole.label} criada com sucesso!')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +108,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
+              constraints: const BoxConstraints(maxWidth: 480),
               child: Card(
                 elevation: 8,
                 color: theme.colorScheme.surface.withValues(alpha: 0.9),
@@ -107,12 +122,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const WineryLogo(size: 70),
                         const SizedBox(height: 16),
                         Text(
-                          'Dados Pessoais & Foto de Perfil',
+                          'Criar Conta no Winery Finder',
                           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 24),
-                        // Seção de foto de perfil
+                        const SizedBox(height: 20),
+                        // Seleção do Perfil
+                        DropdownButtonFormField<UserRole>(
+                          initialValue: _selectedRole,
+                          decoration: const InputDecoration(
+                            labelText: 'Tipo de Perfil de Usuário *',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: UserRole.admirer,
+                              child: Text('Admirador de Vinhos (Consumidor)'),
+                            ),
+                            DropdownMenuItem(
+                              value: UserRole.sommelier,
+                              child: Text('Sommelier Profissional'),
+                            ),
+                            DropdownMenuItem(
+                              value: UserRole.winery,
+                              child: Text('Vinícola / Produtor'),
+                            ),
+                          ],
+                          onChanged: (role) {
+                            if (role != null) setState(() => _selectedRole = role);
+                          },
+                        ),
+                        const SizedBox(height: 20),
                         GestureDetector(
                           onTap: _pickProfilePhoto,
                           child: CircleAvatar(
@@ -151,7 +192,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   prefixIcon: Icon(Icons.badge_outlined),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator: (val) => val == null || val.trim().isEmpty ? 'Informe o CPF' : null,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -164,7 +204,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   prefixIcon: Icon(Icons.phone_outlined),
                                   border: OutlineInputBorder(),
                                 ),
-                                validator: (val) => val == null || val.trim().isEmpty ? 'Informe o telefone' : null,
                               ),
                             ),
                           ],
@@ -177,8 +216,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             prefixIcon: Icon(Icons.home_outlined),
                             border: OutlineInputBorder(),
                           ),
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Informe seu endereço' : null,
                         ),
+                        // Campos Específicos do Sommelier
+                        if (_selectedRole == UserRole.sommelier) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.school, color: Color(0xFF722F37)),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Perfil do Sommelier Profissional',
+                                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _educationController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Formação Profissional / Certificações (ex: WSET, ABS) *',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (val) => _selectedRole == UserRole.sommelier && (val == null || val.trim().isEmpty)
+                                      ? 'Informe a formação profissional'
+                                      : null,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _historyController,
+                                  maxLines: 2,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Histórico e Experiência Profissional *',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (val) => _selectedRole == UserRole.sommelier && (val == null || val.trim().isEmpty)
+                                      ? 'Informe o histórico profissional'
+                                      : null,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: _contactInfoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Contatos / Redes Sociais',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _emailController,
@@ -222,7 +318,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           height: 48,
                           child: FilledButton(
                             onPressed: _handleRegister,
-                            child: const Text('Cadastrar', style: TextStyle(fontSize: 16)),
+                            child: const Text('Cadastrar Conta', style: TextStyle(fontSize: 16)),
                           ),
                         ),
                       ],
