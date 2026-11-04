@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:winery_finder/app_scope.dart';
+import 'package:winery_finder/data/connectivity_monitor.dart';
 import 'package:winery_finder/data/favorites_store.dart';
 import 'package:winery_finder/data/location_provider.dart';
 import 'package:winery_finder/data/recents_store.dart';
@@ -14,6 +15,7 @@ class WineryFinderApp extends StatefulWidget {
     this.location = const NoLocationProvider(),
     this.favorites,
     this.recents,
+    this.connectivity = const AlwaysOnline(),
     super.key,
   });
 
@@ -25,6 +27,9 @@ class WineryFinderApp extends StatefulWidget {
 
   /// Histórico salvo no aparelho; sem valor, fica só em memória.
   final RecentsStore? recents;
+
+  /// Estado da rede para o aviso de offline.
+  final ConnectivityMonitor connectivity;
 
   @override
   State<WineryFinderApp> createState() => _WineryFinderAppState();
@@ -60,7 +65,7 @@ class _WineryFinderAppState extends State<WineryFinderApp> {
           ),
           useMaterial3: true,
         ),
-        home: const HomeShell(),
+        home: HomeShell(connectivity: widget.connectivity),
       ),
     );
   }
