@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:winery_finder/data/location_provider.dart';
 import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/domain/coordinates.dart';
+import 'package:winery_finder/domain/nearby.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/features/map/map_screen.dart';
 import 'package:winery_finder/features/winery_detail/winery_detail_screen.dart';
@@ -51,12 +52,13 @@ void main() {
   /// Mapa falso que lista os nomes na ordem recebida.
   Widget fakeMap(
     BuildContext context,
-    List<Winery> wineries,
+    NearbySelection selection,
     ValueChanged<Winery> onSelected,
   ) {
     return Column(
       children: <Widget>[
-        for (final Winery w in wineries)
+        Text('centro ${selection.center.latitude}'),
+        for (final Winery w in selection.wineries)
           TextButton(
             key: ValueKey<String>('pin-${w.id}'),
             onPressed: () => onSelected(w),
@@ -155,5 +157,56 @@ void main() {
     await pumpMap(tester, wineries: const <Winery>[]);
 
     expect(find.text('Vinícolas próximas aparecerão aqui.'), findsOneWidget);
+  });
+
+  group('vinícolas próximas (US01)', () {
+    final Winery caxias = testWinery(
+      id: 'caxias',
+      name: 'Adega Caxias',
+      coordinates: const Coordinates(-29.17, -51.18),
+    );
+    final Winery portoAlegre = testWinery(
+      id: 'poa',
+      name: 'Vinícola Porto Alegre',
+      coordinates: const Coordinates(-30.03, -51.23),
+    );
+
+    testWidgets('com localização mostra só as vinícolas a até 50 km', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(
+        tester,
+        location: user,
+        wineries: <Winery>[caxias, portoAlegre],
+      );
+
+      expect(find.text('pin Adega Caxias'), findsOneWidget);
+      expect(find.text('pin Vinícola Porto Alegre'), findsNothing);
+      expect(find.text('centro ${user.latitude}'), findsOneWidget);
+      expect(find.textContaining('Sem acesso'), findsNothing);
+    });
+
+    testWidgets('sem permissão centra em Bento Gonçalves e sugere a busca', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester);
+
+      expect(find.text('centro ${bentoGoncalves.latitude}'), findsOneWidget);
+      expect(find.textContaining('busque pela sua cidade'), findsOneWidget);
+      expect(find.textContaining('pin '), findsNWidgets(2));
+    });
+
+    testWidgets('longe da Serra mostra todas e avisa', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: const Coordinates(-23.55, -46.63));
+
+      expect(find.text('centro ${bentoGoncalves.latitude}'), findsOneWidget);
+      expect(
+        find.textContaining('Nenhuma vinícola a até 50 km'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('pin '), findsNWidgets(2));
+    });
   });
 }
