@@ -290,26 +290,23 @@ class _MapScreenState extends State<MapScreen> {
                         spacing: 6,
                         children: winery.wineTypes.map((t) => Chip(label: Text(t.label), backgroundColor: theme.colorScheme.primaryContainer)).toList(),
                       ),
-                      const Divider(height: 24),
-                      // Seção de Vinhos à Venda
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Vinhos & Preços para Venda:', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                          if (canModify)
-                            FilledButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => WineryProductsPanel(winery: winery),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.inventory, size: 18),
-                              label: const Text('Painel de Produtos'),
-                            ),
-                        ],
-                      ),
+                      // Seção do Painel de Produtos para a Vinícola Criadora
+                      if (canModify) ...[
+                        const Divider(height: 24),
+                        Center(
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => WineryProductsPanel(winery: winery),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.inventory, size: 18),
+                            label: const Text('Painel de Produtos'),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       if (wineryWines.isEmpty)
                         const Padding(
