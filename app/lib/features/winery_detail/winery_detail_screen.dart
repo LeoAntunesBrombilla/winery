@@ -5,6 +5,7 @@ import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/features/winery_detail/contact_section.dart';
 import 'package:winery_finder/features/winery_detail/opening_hours_section.dart';
+import 'package:winery_finder/features/winery_detail/photo_carousel.dart';
 import 'package:winery_finder/features/winery_detail/rating_section.dart';
 import 'package:winery_finder/widgets/favorite_button.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
@@ -26,6 +27,7 @@ class WineryDetailScreen extends StatefulWidget {
     required this.winery,
     this.now = DateTime.now,
     this.openUrl = openExternally,
+    this.photoBuilder = cachedPhoto,
     super.key,
   });
 
@@ -36,6 +38,9 @@ class WineryDetailScreen extends StatefulWidget {
 
   /// Abre discador, navegador e app de mapas; injetável nos testes.
   final UrlOpener openUrl;
+
+  /// Desenha as fotos do carrossel; injetável nos testes (sem rede).
+  final PhotoBuilder photoBuilder;
 
   @override
   State<WineryDetailScreen> createState() => _WineryDetailScreenState();
@@ -65,51 +70,72 @@ class _WineryDetailScreenState extends State<WineryDetailScreen> {
         actions: <Widget>[FavoriteButton(winery: winery)],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(bottom: 16),
         children: <Widget>[
-          Text(winery.city, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          RatingSection(rating: winery.rating),
-          const SizedBox(height: 8),
-          if (winery.address.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                children: <Widget>[
-                  Icon(Icons.place_outlined, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(winery.address)),
-                ],
-              ),
+          PhotoCarousel(
+            urls: winery.photoUrls,
+            photoBuilder: widget.photoBuilder,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(winery.city, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 8),
+                RatingSection(rating: winery.rating),
+                const SizedBox(height: 8),
+                if (winery.address.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.place_outlined,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(winery.address)),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ReservationBadge(
+                    requiresReservation: winery.requiresReservation,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: <Widget>[
+                    Icon(Icons.wine_bar, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      TastingPrice.label(winery.tastingPriceCents),
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                RouteButton(
+                  destination: winery.coordinates,
+                  openUrl: widget.openUrl,
+                ),
+                const SizedBox(height: 8),
+                ContactSection(
+                  phone: winery.phone,
+                  website: winery.website,
+                  openUrl: widget.openUrl,
+                ),
+                const Divider(height: 32),
+                OpeningHoursSection(
+                  hours: winery.hours,
+                  today: widget.now().weekday,
+                ),
+              ],
             ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ReservationBadge(
-              requiresReservation: winery.requiresReservation,
-            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              Icon(Icons.wine_bar, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                TastingPrice.label(winery.tastingPriceCents),
-                style: theme.textTheme.bodyLarge,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          RouteButton(destination: winery.coordinates, openUrl: widget.openUrl),
-          const SizedBox(height: 8),
-          ContactSection(
-            phone: winery.phone,
-            website: winery.website,
-            openUrl: widget.openUrl,
-          ),
-          const Divider(height: 32),
-          OpeningHoursSection(hours: winery.hours, today: widget.now().weekday),
         ],
       ),
     );
