@@ -25,7 +25,7 @@ class _HomeShellState extends State<HomeShell> {
         children: <Widget>[
           MapScreen(catalog: scope.catalog),
           FavoritesScreen(catalog: scope.catalog, favorites: scope.favorites),
-          const RecentsScreen(),
+          RecentsScreen(catalog: scope.catalog, recents: scope.recents),
         ],
       ),
       bottomNavigationBar: NavigationBar(

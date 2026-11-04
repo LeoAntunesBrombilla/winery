@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:winery_finder/app_scope.dart';
 import 'package:winery_finder/data/url_opener.dart';
 import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/winery.dart';
@@ -20,7 +21,7 @@ Future<void> openWineryDetail(BuildContext context, Winery winery) {
 
 /// Ficha da vinícola, aberta a partir do pin e da lista. As informações de
 /// decisão (endereço, reserva, preço) ficam no topo, visíveis sem rolar.
-class WineryDetailScreen extends StatelessWidget {
+class WineryDetailScreen extends StatefulWidget {
   const WineryDetailScreen({
     required this.winery,
     this.now = DateTime.now,
@@ -37,7 +38,26 @@ class WineryDetailScreen extends StatelessWidget {
   final UrlOpener openUrl;
 
   @override
+  State<WineryDetailScreen> createState() => _WineryDetailScreenState();
+}
+
+class _WineryDetailScreenState extends State<WineryDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Abrir a ficha registra a vinícola nos Recentes (US13). Depois do
+    // primeiro quadro, para não notificar as abas no meio de um build.
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (mounted) {
+        AppScope.maybeOf(context)?.recents
+            .record(widget.winery.id, widget.now());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final Winery winery = widget.winery;
     final ThemeData theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
@@ -81,15 +101,15 @@ class WineryDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          RouteButton(destination: winery.coordinates, openUrl: openUrl),
+          RouteButton(destination: winery.coordinates, openUrl: widget.openUrl),
           const SizedBox(height: 8),
           ContactSection(
             phone: winery.phone,
             website: winery.website,
-            openUrl: openUrl,
+            openUrl: widget.openUrl,
           ),
           const Divider(height: 32),
-          OpeningHoursSection(hours: winery.hours, today: now().weekday),
+          OpeningHoursSection(hours: winery.hours, today: widget.now().weekday),
         ],
       ),
     );
