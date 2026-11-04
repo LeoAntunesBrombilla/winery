@@ -142,6 +142,8 @@ void main() {
             failure: const AdminException('Esta conta não é administradora.'),
           ),
           store: FakeAdminStore(),
+          photos: FakePhotoStore(),
+          picker: FakePhotoPicker(),
         ),
       );
 
@@ -160,7 +162,14 @@ void main() {
       WidgetTester tester,
     ) async {
       final FakeAdminStore store = FakeAdminStore(<Winery>[testWinery()]);
-      await tester.pumpWidget(AdminApp(auth: FakeAdminAuth(), store: store));
+      await tester.pumpWidget(
+        AdminApp(
+          auth: FakeAdminAuth(),
+          store: store,
+          photos: FakePhotoStore(),
+          picker: FakePhotoPicker(),
+        ),
+      );
 
       await tester.enterText(
         find.widgetWithText(TextFormField, 'E-mail'),
@@ -185,7 +194,14 @@ void main() {
 
     testWidgets('sair volta para o login', (WidgetTester tester) async {
       final FakeAdminAuth auth = FakeAdminAuth();
-      await tester.pumpWidget(AdminApp(auth: auth, store: FakeAdminStore()));
+      await tester.pumpWidget(
+        AdminApp(
+          auth: auth,
+          store: FakeAdminStore(),
+          photos: FakePhotoStore(),
+          picker: FakePhotoPicker(),
+        ),
+      );
       await tester.enterText(find.widgetWithText(TextFormField, 'E-mail'), 'a');
       await tester.enterText(find.widgetWithText(TextFormField, 'Senha'), 'b');
       await tester.tap(find.text('Entrar'));

@@ -1,4 +1,5 @@
 import 'package:winery_finder/admin/admin_services.dart';
+import 'package:winery_finder/admin/photo_services.dart';
 import 'package:winery_finder/admin/winery_form_data.dart';
 import 'package:winery_finder/domain/winery.dart';
 
@@ -60,4 +61,28 @@ class FakeAdminAuth implements AdminAuth {
 
   @override
   Future<void> signOut() async => signOuts++;
+}
+
+class FakePhotoStore implements PhotoStore {
+  final List<String> uploaded = <String>[];
+  final List<String> deleted = <String>[];
+
+  @override
+  Future<String> upload(String wineryId, PickedPhoto photo) async {
+    final String url = 'https://storage.test/$wineryId/${photo.name}';
+    uploaded.add(url);
+    return url;
+  }
+
+  @override
+  Future<void> delete(String wineryId, String url) async => deleted.add(url);
+}
+
+class FakePhotoPicker implements PhotoPicker {
+  FakePhotoPicker([this.next]);
+
+  PickedPhoto? next;
+
+  @override
+  Future<PickedPhoto?> pick() async => next;
 }
