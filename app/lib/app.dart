@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:winery_finder/app_scope.dart';
 import 'package:winery_finder/data/favorites_store.dart';
 import 'package:winery_finder/data/location_provider.dart';
+import 'package:winery_finder/data/winery_catalog.dart';
 import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/features/home/home_shell.dart';
 
@@ -26,10 +27,21 @@ class WineryFinderApp extends StatefulWidget {
 
 class _WineryFinderAppState extends State<WineryFinderApp> {
   late final FavoritesStore _favorites = widget.favorites ?? FavoritesStore();
+  late final WineryCatalog _catalog = WineryCatalog(
+    repository: widget.repository,
+    location: widget.location,
+  )..ensureLoaded();
+
+  @override
+  void dispose() {
+    _catalog.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AppScope(
+      catalog: _catalog,
       favorites: _favorites,
       child: MaterialApp(
         title: 'Winery Finder',
@@ -41,10 +53,7 @@ class _WineryFinderAppState extends State<WineryFinderApp> {
           ),
           useMaterial3: true,
         ),
-        home: HomeShell(
-          repository: widget.repository,
-          location: widget.location,
-        ),
+        home: const HomeShell(),
       ),
     );
   }

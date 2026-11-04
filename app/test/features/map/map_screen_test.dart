@@ -1,32 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:winery_finder/data/location_provider.dart';
-import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/domain/coordinates.dart';
 import 'package:winery_finder/domain/nearby.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/features/map/map_screen.dart';
 import 'package:winery_finder/features/winery_detail/winery_detail_screen.dart';
 
+import '../../support/fakes.dart';
 import '../../support/winery_fixture.dart';
-
-class _FakeRepository implements WineryRepository {
-  const _FakeRepository(this.wineries);
-
-  final List<Winery> wineries;
-
-  @override
-  Future<List<Winery>> fetchAll() async => wineries;
-}
-
-class _FixedLocation implements LocationProvider {
-  const _FixedLocation(this.coordinates);
-
-  final Coordinates? coordinates;
-
-  @override
-  Future<Coordinates?> current() async => coordinates;
-}
 
 void main() {
   // Usuário no centro de Bento Gonçalves.
@@ -76,8 +57,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: MapScreen(
-          repository: _FakeRepository(wineries ?? catalog),
-          location: _FixedLocation(location),
+          catalog: fakeCatalog(wineries ?? catalog, user: location),
           mapBuilder: fakeMap,
         ),
       ),

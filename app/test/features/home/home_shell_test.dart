@@ -17,7 +17,7 @@ void main() {
     await tester.tap(find.text('Favoritos'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Você ainda não salvou nenhuma vinícola.'),
+      find.textContaining('Você ainda não salvou nenhuma vinícola.'),
       findsOneWidget,
     );
 

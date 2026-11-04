@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:winery_finder/data/location_provider.dart';
-import 'package:winery_finder/data/winery_repository.dart';
-import 'package:winery_finder/domain/coordinates.dart';
+import 'package:winery_finder/data/winery_catalog.dart';
 import 'package:winery_finder/domain/nearby.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
@@ -23,14 +21,12 @@ enum _MapView { map, list }
 /// As duas visões recebem o mesmo conjunto de vinícolas, na mesma ordem.
 class MapScreen extends StatefulWidget {
   const MapScreen({
-    this.repository = const EmptyWineryRepository(),
-    this.location = const NoLocationProvider(),
+    required this.catalog,
     this.mapBuilder = _googleMap,
     super.key,
   });
 
-  final WineryRepository repository;
-  final LocationProvider location;
+  final WineryCatalog catalog;
   final WineryMapBuilder mapBuilder;
 
   static Widget _googleMap(
@@ -45,32 +41,17 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-/// Catálogo carregado: todas as vinícolas (para a busca) e o recorte
-/// próximo ao usuário (para a abertura do mapa).
-class _Catalog {
-  const _Catalog(this.all, this.nearby);
-
-  final List<Winery> all;
-  final NearbySelection nearby;
-}
-
 class _MapScreenState extends State<MapScreen> {
   _MapView _view = _MapView.map;
-  late final Future<_Catalog> _catalog = _load();
   final TextEditingController _search = TextEditingController();
   final Set<WineType> _types = <WineType>{};
 
   String get _query => _search.text;
 
-  Future<_Catalog> _load() async {
-    final (List<Winery> wineries, Coordinates? user) = await (
-      widget.repository.fetchAll(),
-      widget.location.current(),
-    ).wait;
-    final List<Winery> sorted = WineryFilter.apply(
-      wineries.map((Winery w) => w.withDistanceFrom(user)),
-    );
-    return _Catalog(sorted, Nearby.select(sorted, user));
+  @override
+  void initState() {
+    super.initState();
+    widget.catalog.ensureLoaded();
   }
 
   @override
@@ -99,7 +80,7 @@ class _MapScreenState extends State<MapScreen> {
   /// Conjunto exibido no mapa e na lista. A busca procura no catálogo
   /// inteiro (o usuário pode buscar uma cidade fora dos 50 km); sem busca,
   /// vale o recorte próximo.
-  NearbySelection _visible(_Catalog catalog) {
+  NearbySelection _visible(WineryCatalog catalog) {
     final bool searching = WineryFilter.isSearching(_query);
     final List<Winery> base = searching ? catalog.all : catalog.nearby.wineries;
     return NearbySelection(
@@ -109,26 +90,20 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _openDetail(Winery winery) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) => WineryDetailScreen(winery: winery),
-      ),
-    );
-  }
+  void _openDetail(Winery winery) => openWineryDetail(context, winery);
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<_Catalog>(
-      future: _catalog,
-      builder: (BuildContext context, AsyncSnapshot<_Catalog> snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+    return ListenableBuilder(
+      listenable: widget.catalog,
+      builder: (BuildContext context, Widget? child) {
+        final WineryCatalog catalog = widget.catalog;
+        if (!catalog.isLoaded) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final _Catalog? catalog = snapshot.data;
-        if (catalog == null || catalog.all.isEmpty) {
+        if (catalog.all.isEmpty) {
           return const PlaceholderScreen(
             title: 'Mapa',
             message: 'Vinícolas próximas aparecerão aqui.',

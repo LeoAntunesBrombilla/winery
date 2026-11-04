@@ -24,7 +24,11 @@ class PlaceholderScreen extends StatelessWidget {
           children: <Widget>[
             Icon(icon, size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: 16),
-            Text(message, style: theme.textTheme.bodyLarge),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
           ],
         ),
       ),
