@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:winery_finder/features/winery_detail/winery_detail_screen.dart';
+import 'package:winery_finder/widgets/rating_stars.dart';
 
 import '../../support/winery_fixture.dart';
 
@@ -110,6 +111,31 @@ void main() {
       expect(today.style?.fontWeight, FontWeight.bold);
       final Text monday = tester.widget<Text>(find.text('Segunda'));
       expect(monday.style?.fontWeight, isNot(FontWeight.bold));
+    });
+  });
+
+  group('nota da equipe (US15)', () {
+    testWidgets('mostra a nota com uma casa decimal e estrelas', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(home: WineryDetailScreen(winery: testWinery(rating: 3.5))),
+      );
+
+      expect(find.text('3,5'), findsOneWidget);
+      expect(find.byType(RatingStars), findsOneWidget);
+      expect(find.text('Nota da equipe Winery Finder'), findsOneWidget);
+    });
+
+    testWidgets('vinícola sem nota mostra Sem nota', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(home: WineryDetailScreen(winery: testWinery(rating: null))),
+      );
+
+      expect(find.text('Sem nota'), findsOneWidget);
+      expect(find.byType(RatingStars), findsNothing);
     });
   });
 }
