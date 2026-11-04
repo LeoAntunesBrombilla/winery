@@ -80,7 +80,7 @@ Future<void> _import(
       FirestoreRest.commitBody(
         projectId,
         sheet.entries,
-        importedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
     ),
   );

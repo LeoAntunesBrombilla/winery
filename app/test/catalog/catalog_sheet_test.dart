@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:winery_finder/catalog/catalog_entry.dart';
 import 'package:winery_finder/catalog/catalog_sheet.dart';
+import 'package:winery_finder/domain/weekly_hours.dart';
 import 'package:winery_finder/domain/winery.dart';
 
 import 'catalog_fixture.dart';
@@ -24,7 +25,16 @@ void main() {
       expect(entry.city, 'Bento Gonçalves');
       expect(entry.latitude, -29.1756);
       expect(entry.wineTypes, <WineType>{WineType.tinto, WineType.espumante});
-      expect(entry.openingHours, 'Seg a sáb, 9h às 17h');
+      expect(entry.address, 'Via Trento, 2355');
+      expect(
+        entry.openingHours.on(DateTime.monday),
+        const OpeningInterval(540, 1080),
+      );
+      expect(
+        entry.openingHours.on(DateTime.saturday),
+        const OpeningInterval(540, 1020),
+      );
+      expect(entry.openingHours.on(DateTime.sunday), isNull);
       expect(entry.tastingPriceCents, 8500);
       expect(entry.requiresReservation, isTrue);
       expect(entry.rating, 4.7);
@@ -51,15 +61,21 @@ void main() {
     test('exige horário, preço e reserva preenchidos', () {
       final CatalogSheetResult result = CatalogSheet.parse(
         sheet(<String>[
-          'casa-valduga,Casa Valduga,Bento Gonçalves,-29.1,-51.5,tinto,,,,,,,'
-              'site,20/10/2026',
+          'casa-valduga,Casa Valduga,Bento Gonçalves,Rua A,-29.1,-51.5,tinto,'
+              ',,,,,,,,,,,,site,20/10/2026',
         ]),
         checkCount: false,
       );
 
       expect(result.entries, isEmpty);
       expect(messages(result), <String>[
-        'linha 2: "horario" não preenchido',
+        'linha 2: "seg" não preenchido',
+        'linha 2: "ter" não preenchido',
+        'linha 2: "qua" não preenchido',
+        'linha 2: "qui" não preenchido',
+        'linha 2: "sex" não preenchido',
+        'linha 2: "sab" não preenchido',
+        'linha 2: "dom" não preenchido',
         'linha 2: "preco_degustacao" não preenchido',
         'linha 2: "reserva_obrigatoria" não preenchido',
       ]);
@@ -121,7 +137,8 @@ void main() {
     test('aponta cada campo inválido da linha', () {
       final CatalogSheetResult result = CatalogSheet.parse(
         sheet(<String>[
-          'x,X,Y,-95,200,tinto;laranja,9h,10,talvez,,,7,email,31/02/2026',
+          'x,X,Y,Rua A,-95,200,tinto;laranja,18:00-09:00,9h-17h,9h-17h,9h-17h,'
+              '9h-17h,9h-17h,fechado,10,talvez,,,7,email,31/02/2026',
         ]),
         checkCount: false,
       );
@@ -130,6 +147,8 @@ void main() {
         'linha 2: latitude inválida',
         'linha 2: longitude inválida',
         'linha 2: tipo de vinho "laranja" desconhecido',
+        'linha 2: seg: horário "18:00-09:00" inválido (use 09:00-17:00 ou '
+            'fechado)',
         'linha 2: reserva_obrigatoria deve ser "sim" ou "não"',
         'linha 2: nota deve estar entre 0 e 5',
         'linha 2: fonte_verificacao deve ser "site" ou "telefone"',
@@ -140,7 +159,8 @@ void main() {
     test('telefone, site e nota são opcionais', () {
       final CatalogSheetResult result = CatalogSheet.parse(
         sheet(<String>[
-          'aurora,Aurora,Bento Gonçalves,-29.16,-51.51,branco,9h às 18h,0,não,'
+          'aurora,Aurora,Bento Gonçalves,Rua B,-29.16,-51.51,branco,9h às 18h,'
+              '9h às 18h,9h às 18h,9h às 18h,9h às 18h,fechado,fechado,0,não,'
               ',,,telefone,01/10/2026',
         ]),
         checkCount: false,

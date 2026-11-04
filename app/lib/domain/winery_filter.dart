@@ -62,7 +62,8 @@ abstract final class WineryFilter {
   static String formatDistance(double distanceKm) =>
       '${distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km';
 
-  /// Nota com uma casa decimal: "4,7".
-  static String formatRating(double rating) =>
-      rating.toStringAsFixed(1).replaceAll('.', ',');
+  /// Nota com uma casa decimal: "4,7", ou "Sem nota".
+  static String formatRating(double? rating) => rating == null
+      ? 'Sem nota'
+      : rating.toStringAsFixed(1).replaceAll('.', ',');
 }
