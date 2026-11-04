@@ -22,6 +22,7 @@ void main() {
 
     expect(find.text('Casa Valduga'), findsOneWidget);
     expect(find.text('Bento Gonçalves'), findsOneWidget);
+    expect(find.text('Via Trento, 2355'), findsOneWidget);
     expect(find.text(r'Degustação: R$ 85,00 por pessoa'), findsOneWidget);
   });
 
@@ -44,7 +45,6 @@ void main() {
 
     final Finder badge = find.text('Reserva obrigatória');
     expect(badge, findsOneWidget);
-    expect(find.byType(Scrollable), findsNothing);
     final Rect screen =
         Offset.zero & tester.view.physicalSize / tester.view.devicePixelRatio;
     expect(screen.contains(tester.getBottomRight(badge)), isTrue);
@@ -56,5 +56,60 @@ void main() {
     );
 
     expect(find.text('Sem necessidade de reserva'), findsOneWidget);
+  });
+
+  group('horário de funcionamento (US05)', () {
+    // 07/11/2026 é um sábado.
+    DateTime saturday() => DateTime(2026, 11, 7, 10);
+
+    Future<void> pumpHours(WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WineryDetailScreen(winery: testWinery(), now: saturday),
+        ),
+      );
+      await tester.scrollUntilVisible(find.text('Domingo'), 100);
+    }
+
+    testWidgets('lista os sete dias com o horário de cada um', (
+      WidgetTester tester,
+    ) async {
+      await pumpHours(tester);
+
+      for (final String day in <String>[
+        'Segunda',
+        'Terça',
+        'Quarta',
+        'Quinta',
+        'Sexta',
+        'Domingo',
+      ]) {
+        expect(find.text(day), findsOneWidget, reason: day);
+      }
+      expect(find.text('09:00 – 17:00'), findsNWidgets(6));
+    });
+
+    testWidgets('dia sem funcionamento aparece como Fechado', (
+      WidgetTester tester,
+    ) async {
+      await pumpHours(tester);
+
+      final Finder sunday = find.byKey(const ValueKey<int>(DateTime.sunday));
+      expect(
+        find.descendant(of: sunday, matching: find.text('Fechado')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('destaca o dia de hoje', (WidgetTester tester) async {
+      await pumpHours(tester);
+
+      expect(find.text('Sábado (hoje)'), findsOneWidget);
+      expect(find.text('Sábado'), findsNothing);
+      final Text today = tester.widget<Text>(find.text('Sábado (hoje)'));
+      expect(today.style?.fontWeight, FontWeight.bold);
+      final Text monday = tester.widget<Text>(find.text('Segunda'));
+      expect(monday.style?.fontWeight, isNot(FontWeight.bold));
+    });
   });
 }
