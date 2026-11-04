@@ -16,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real do endereço do usuário até a vinícola.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias destacado e navegação.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -112,7 +112,7 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  /// Abre o Google Maps traçando a rota direto do endereço do usuário cadastrado até a vinícola
+  /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
   Future<void> _openGoogleMapsRoute(Winery winery) async {
     await _fetchRealRoadRoute(winery);
 
@@ -649,7 +649,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View com Trajeto Real em Ruas/Rodovias
+                  // Map View com Trajeto Real em Ruas/Rodovias Destacado
                   Expanded(
                     flex: 3,
                     child: Stack(
@@ -665,39 +665,46 @@ class _MapScreenState extends State<MapScreen> {
                               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                               userAgentPackageName: 'com.winery.winery_finder',
                             ),
-                            // Trajeto Real pelas Ruas/Rodovias (PolylineLayer)
+                            // Trajeto Real pelas Ruas/Rodovias DESTACADO (PolylineLayer Duplo com Destaque Dourado e Cor Vinho)
                             if (_routeWinery != null && _routePoints.isNotEmpty)
                               PolylineLayer(
                                 polylines: [
+                                  // Camada 1: Borda Dourada / Amarela de Destaque Vibrante
+                                  Polyline(
+                                    points: _routePoints,
+                                    strokeWidth: 9.5,
+                                    color: Colors.amberAccent,
+                                  ),
+                                  // Camada 2: Linha Principal Cor Vinho
                                   Polyline(
                                     points: _routePoints,
                                     strokeWidth: 5.5,
-                                    color: const Color(0xFF722F37), // Cor Vinho
+                                    color: const Color(0xFF722F37),
                                   ),
                                 ],
                               ),
                             MarkerLayer(
                               markers: [
-                                // Marcador do Usuário/Partida
+                                // Marcador do Usuário/Partida (GPS Azul)
                                 if (_routeWinery != null)
                                   const Marker(
                                     point: _defaultOrigin,
-                                    width: 40,
-                                    height: 40,
-                                    child: Icon(Icons.my_location, size: 34, color: Colors.blueAccent),
+                                    width: 44,
+                                    height: 44,
+                                    child: Icon(Icons.my_location, size: 38, color: Colors.blueAccent),
                                   ),
                                 ...filteredWineries.map((winery) {
                                   final isSelected = _selectedWinery?.id == winery.id;
                                   final isRouteTarget = _routeWinery?.id == winery.id;
                                   return Marker(
                                     point: LatLng(winery.latitude, winery.longitude),
-                                    width: 40,
-                                    height: 40,
+                                    width: 48,
+                                    height: 48,
                                     child: GestureDetector(
                                       onTap: () => _showWineryDetails(winery),
                                       child: Icon(
                                         Icons.location_on,
-                                        size: isSelected || isRouteTarget ? 46 : 36,
+                                        size: isRouteTarget ? 50 : (isSelected ? 44 : 36),
                                         color: isRouteTarget
                                             ? Colors.greenAccent
                                             : (isSelected ? Colors.amber : const Color(0xFF722F37)),
@@ -709,7 +716,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Trajeto Real do Endereço do Usuário
+                        // Card/Banner de Trajeto Real do Endereço do Usuário com Destaque
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
