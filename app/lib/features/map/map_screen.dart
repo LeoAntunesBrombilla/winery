@@ -45,11 +45,23 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
+/// Catálogo carregado: todas as vinícolas (para a busca) e o recorte
+/// próximo ao usuário (para a abertura do mapa).
+class _Catalog {
+  const _Catalog(this.all, this.nearby);
+
+  final List<Winery> all;
+  final NearbySelection nearby;
+}
+
 class _MapScreenState extends State<MapScreen> {
   _MapView _view = _MapView.map;
-  late final Future<NearbySelection> _selection = _load();
+  late final Future<_Catalog> _catalog = _load();
+  final TextEditingController _search = TextEditingController();
 
-  Future<NearbySelection> _load() async {
+  String get _query => _search.text;
+
+  Future<_Catalog> _load() async {
     final (List<Winery> wineries, Coordinates? user) = await (
       widget.repository.fetchAll(),
       widget.location.current(),
@@ -57,7 +69,31 @@ class _MapScreenState extends State<MapScreen> {
     final List<Winery> sorted = WineryFilter.apply(
       wineries.map((Winery w) => w.withDistanceFrom(user)),
     );
-    return Nearby.select(sorted, user);
+    return _Catalog(sorted, Nearby.select(sorted, user));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    setState(() {});
+  }
+
+  /// Conjunto exibido no mapa e na lista. A busca procura no catálogo
+  /// inteiro (o usuário pode buscar uma cidade fora dos 50 km); sem busca,
+  /// vale o recorte próximo.
+  NearbySelection _visible(_Catalog catalog) {
+    final bool searching = WineryFilter.isSearching(_query);
+    final List<Winery> base = searching ? catalog.all : catalog.nearby.wineries;
+    return NearbySelection(
+      WineryFilter.apply(base, query: _query),
+      catalog.nearby.center,
+      catalog.nearby.mode,
+    );
   }
 
   void _openDetail(Winery winery) {
@@ -70,23 +106,26 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<NearbySelection>(
-      future: _selection,
-      builder: (BuildContext context, AsyncSnapshot<NearbySelection> snapshot) {
+    return FutureBuilder<_Catalog>(
+      future: _catalog,
+      builder: (BuildContext context, AsyncSnapshot<_Catalog> snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final NearbySelection? selection = snapshot.data;
-        if (selection == null || selection.wineries.isEmpty) {
+        final _Catalog? catalog = snapshot.data;
+        if (catalog == null || catalog.all.isEmpty) {
           return const PlaceholderScreen(
             title: 'Mapa',
             message: 'Vinícolas próximas aparecerão aqui.',
             icon: Icons.map_outlined,
           );
         }
-        final String? notice = Nearby.notice(selection.mode);
+        final NearbySelection selection = _visible(catalog);
+        final String? notice = WineryFilter.isSearching(_query)
+            ? null
+            : Nearby.notice(selection.mode);
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mapa'),
@@ -116,24 +155,81 @@ class _MapScreenState extends State<MapScreen> {
           ),
           body: Column(
             children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (String _) => setState(() {}),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar vinícola ou cidade',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Limpar busca',
+                            onPressed: _clearSearch,
+                            icon: const Icon(Icons.close),
+                          ),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
               if (notice != null) _Notice(notice),
               Expanded(
-                child: switch (_view) {
-                  _MapView.map => widget.mapBuilder(
-                    context,
-                    selection,
-                    _openDetail,
-                  ),
-                  _MapView.list => WineryList(
-                    wineries: selection.wineries,
-                    onSelected: _openDetail,
-                  ),
-                },
+                child: selection.wineries.isEmpty
+                    ? _NoResults(query: _query.trim(), onClear: _clearSearch)
+                    : switch (_view) {
+                        _MapView.map => widget.mapBuilder(
+                          context,
+                          selection,
+                          _openDetail,
+                        ),
+                        _MapView.list => WineryList(
+                          wineries: selection.wineries,
+                          onSelected: _openDetail,
+                        ),
+                      },
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _NoResults extends StatelessWidget {
+  const _NoResults({required this.query, required this.onClear});
+
+  final String query;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.search_off, size: 48, color: theme.colorScheme.primary),
+            const SizedBox(height: 12),
+            Text(
+              'Nenhuma vinícola encontrada para "$query".',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onClear,
+              child: const Text('Limpar busca'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

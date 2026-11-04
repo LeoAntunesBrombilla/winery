@@ -5,8 +5,16 @@ import 'package:winery_finder/domain/winery.dart';
 /// Sem dependência de Flutter nem de Firebase, para serem testadas
 /// unitariamente.
 abstract final class WineryFilter {
-  /// Filtra por texto (nome ou cidade, sem diferenciar maiúsculas) e por
-  /// tipos de vinho. Um conjunto vazio de tipos significa "todos".
+  /// Busca só vale a partir de [minQueryLength] caracteres (US03).
+  static const int minQueryLength = 2;
+
+  /// A busca está ativa para [query] (2+ caracteres sem contar espaços).
+  static bool isSearching(String query) =>
+      query.trim().length >= minQueryLength;
+
+  /// Filtra por texto (nome ou cidade, ignorando maiúsculas e acentos, a
+  /// partir de 2 caracteres) e por tipos de vinho. Um conjunto vazio de
+  /// tipos significa "todos".
   /// O resultado vem ordenado da vinícola mais próxima para a mais distante;
   /// sem distância (usuário sem localização), por nome.
   static List<Winery> apply(
@@ -14,13 +22,15 @@ abstract final class WineryFilter {
     String query = '',
     Set<WineType> types = const <WineType>{},
   }) {
-    final String normalizedQuery = query.trim().toLowerCase();
+    final String normalizedQuery = isSearching(query)
+        ? normalize(query.trim())
+        : '';
 
     final List<Winery> result = wineries.where((Winery w) {
       final bool matchesQuery =
           normalizedQuery.isEmpty ||
-          w.name.toLowerCase().contains(normalizedQuery) ||
-          w.city.toLowerCase().contains(normalizedQuery);
+          normalize(w.name).contains(normalizedQuery) ||
+          normalize(w.city).contains(normalizedQuery);
       final bool matchesType = types.isEmpty || w.wineTypes.any(types.contains);
       return matchesQuery && matchesType;
     }).toList();
@@ -41,11 +51,12 @@ abstract final class WineryFilter {
     if (da == null && db != null) {
       return 1;
     }
-    return _sortKey(a.name).compareTo(_sortKey(b.name));
+    return normalize(a.name).compareTo(normalize(b.name));
   }
 
-  /// Minúsculas e sem acento, para "Álvaro" ficar junto de "Alvaro".
-  static String _sortKey(String name) {
+  /// Minúsculas e sem acento: "Álvaro" e "alvaro" ficam iguais na busca e
+  /// na ordenação.
+  static String normalize(String name) {
     const String accented = 'áàâãäéèêëíìîïóòôõöúùûüç';
     const String plain = 'aaaaaeeeeiiiiooooouuuuc';
     final StringBuffer key = StringBuffer();

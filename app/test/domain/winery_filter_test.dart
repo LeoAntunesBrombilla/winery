@@ -85,6 +85,19 @@ void main() {
       expect(result.single.id, '1');
     });
 
+    test('busca ignora acentos (US03)', () {
+      expect(WineryFilter.apply(all, query: 'vinicola').single.id, '2');
+      expect(WineryFilter.apply(all, query: 'GONCALVES'), hasLength(2));
+    });
+
+    test('busca só vale a partir de 2 caracteres (US03)', () {
+      expect(WineryFilter.apply(all, query: 'm'), hasLength(3));
+      expect(WineryFilter.apply(all, query: ' m '), hasLength(3));
+      expect(WineryFilter.apply(all, query: 'mi').single.id, '3');
+      expect(WineryFilter.isSearching(' m '), isFalse);
+      expect(WineryFilter.isSearching('mi'), isTrue);
+    });
+
     test('devolve lista vazia quando nada casa', () {
       final List<Winery> result = WineryFilter.apply(all, query: 'garibaldi');
 
