@@ -10,6 +10,7 @@ void main() {
     wineTypes: <WineType>{WineType.tinto, WineType.espumante},
     distanceKm: 12.4,
     rating: 4.7,
+    tastingPriceCents: 0,
   );
   const Winery aurora = Winery(
     id: '2',
@@ -18,6 +19,7 @@ void main() {
     wineTypes: <WineType>{WineType.branco},
     distanceKm: 3.2,
     rating: 4.3,
+    tastingPriceCents: 0,
   );
   const Winery miolo = Winery(
     id: '3',
@@ -26,6 +28,7 @@ void main() {
     wineTypes: <WineType>{WineType.tinto, WineType.rose},
     distanceKm: 0.65,
     rating: 4.8,
+    tastingPriceCents: 0,
   );
   const List<Winery> all = <Winery>[valduga, aurora, miolo];
 
