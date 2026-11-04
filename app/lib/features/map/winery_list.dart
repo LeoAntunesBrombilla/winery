@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
+import 'package:winery_finder/widgets/favorite_button.dart';
 
-/// Lista de vinícolas na ordem recebida (US02): nome, cidade, distância e
-/// nota. Tocar num item chama [onSelected], que abre a ficha.
+/// Lista de vinícolas na ordem recebida (US02): nome, cidade, distância,
+/// nota e coração de favorito (US11). Tocar num item chama [onSelected],
+/// que abre a ficha.
 class WineryList extends StatelessWidget {
   const WineryList({
     required this.wineries,
@@ -37,6 +39,7 @@ class WineryList extends StatelessWidget {
               Icon(Icons.star, size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 4),
               Text(WineryFilter.formatRating(winery.rating)),
+              FavoriteButton(winery: winery),
             ],
           ),
           onTap: () => onSelected(winery),
