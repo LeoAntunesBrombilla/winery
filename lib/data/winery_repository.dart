@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:winery_finder/domain/winery.dart';
 
-/// Repositório em memória com catálogo completo e enriquecido de vinícolas do Brasil e do mundo,
-/// contendo logotipos, fotos, endereços, responsáveis, sommeliers e uvas cultivadas.
+/// Repositório com catálogo completo e global das vinícolas mais prestigiadas do Brasil e do Mundo.
 class WineryRepository extends ChangeNotifier {
   WineryRepository._();
   static final WineryRepository instance = WineryRepository._();
@@ -174,7 +173,7 @@ class WineryRepository extends ChangeNotifier {
       rating: 4.7,
       latitude: -29.2280,
       longitude: -51.3850,
-      address: 'Rua Julio Perini, 845 - Distrito de Fazenda Souza, Farroupilha - RS',
+      address: 'Rua Julio Perini, 845 - Farroupilha - RS',
       logoUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
       photoUrls: const <String>[
         'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
@@ -203,89 +202,9 @@ class WineryRepository extends ChangeNotifier {
       cultivatedGrapes: <String>['Syrah', 'Merlot', 'Cabernet Franc', 'Chardonnay'],
       creatorEmail: 'admin@winery.com',
     ),
-    Winery(
-      id: 'br_11',
-      name: 'Larentis',
-      city: 'Bento Gonçalves (Vale dos Vinhedos - RS)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco},
-      distanceKm: 4.9,
-      rating: 4.7,
-      latitude: -29.1980,
-      longitude: -51.5350,
-      address: 'Caminho Vindima, Via Vale dos Vinhedos - Bento Gonçalves - RS',
-      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      ],
-      responsibleName: 'André Larentis',
-      sommelierName: 'Cezar Larentis',
-      cultivatedGrapes: <String>['Marselan', 'Merlot', 'Tannat', 'Trebbiano'],
-      creatorEmail: 'admin@winery.com',
-    ),
 
     // ==========================================
-    // --- BRASIL: CAMPANHA GAÚCHA & FRONTEIRA (RS) ---
-    // ==========================================
-    Winery(
-      id: 'br_12',
-      name: 'Guatambu Estância do Vinho',
-      city: 'Dom Pedrito (Campanha Gaúcha - RS)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.espumante, WineType.rose},
-      distanceKm: 340.0,
-      rating: 4.9,
-      latitude: -30.9820,
-      longitude: -54.6730,
-      address: 'Rodovia BR-293, Km 265 - Dom Pedrito - RS',
-      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      ],
-      responsibleName: 'Valter Pötter',
-      sommelierName: 'Gabriela Pötter',
-      cultivatedGrapes: <String>['Tannat', 'Tempranillo', 'Sauvignon Blanc', 'Chardonnay', 'Cabernet Sauvignon'],
-      creatorEmail: 'admin@winery.com',
-    ),
-    Winery(
-      id: 'br_13',
-      name: 'Vinícola Batalha',
-      city: 'Candiota (Campanha Gaúcha - RS)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.espumante},
-      distanceKm: 380.0,
-      rating: 4.7,
-      latitude: -31.5780,
-      longitude: -53.7120,
-      address: 'Rodovia BR-293, Km 138 - Candiota - RS',
-      logoUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      ],
-      responsibleName: 'Luiz Batalha',
-      sommelierName: 'Marcos Batalha',
-      cultivatedGrapes: <String>['Touriga Nacional', 'Tempranillo', 'Sauvignon Blanc', 'Chardonnay'],
-      creatorEmail: 'admin@winery.com',
-    ),
-    Winery(
-      id: 'br_14',
-      name: 'Cordilheira de Santana',
-      city: 'Santana do Livramento (RS)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco},
-      distanceKm: 420.0,
-      rating: 4.8,
-      latitude: -30.8880,
-      longitude: -55.5310,
-      address: 'Estrada do Cerro da Vigia, s/n - Santana do Livramento - RS',
-      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      ],
-      responsibleName: 'Rossana Vigano',
-      sommelierName: 'João Vigano',
-      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Merlot', 'Tannat', 'Chardonnay'],
-      creatorEmail: 'admin@winery.com',
-    ),
-
-    // ==========================================
-    // --- BRASIL: SANTA CATARINA (ALTO SERRANO) ---
+    // --- BRASIL: OUTRAS REGIÕES (SC, SP, MG, PE) ---
     // ==========================================
     Winery(
       id: 'br_15',
@@ -296,58 +215,16 @@ class WineryRepository extends ChangeNotifier {
       rating: 4.9,
       latitude: -28.2910,
       longitude: -49.9320,
-      address: 'Avenida Vinte e Sete de Julho, 5890 - São Joaquim - SC',
+      address: 'Rodovia SC-110, Km 300 - São Joaquim - SC',
       logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
       photoUrls: const <String>[
         'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
       ],
       responsibleName: 'Dilermando D\'Wolf',
       sommelierName: 'Nei Rasche',
-      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Merlot', 'Cabernet Franc', 'Chardonnay', 'Pinot Noir', 'Sangiovese'],
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Merlot', 'Cabernet Franc', 'Chardonnay', 'Pinot Noir'],
       creatorEmail: 'admin@winery.com',
     ),
-    Winery(
-      id: 'br_16',
-      name: 'Quinta da Neve',
-      city: 'São Joaquim (SC)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco},
-      distanceKm: 285.0,
-      rating: 4.7,
-      latitude: -28.3150,
-      longitude: -49.9120,
-      address: 'Rodovia SC-110, Km 396 - São Joaquim - SC',
-      logoUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      ],
-      responsibleName: 'Renato Borges',
-      sommelierName: 'Rodrigo Borges',
-      cultivatedGrapes: <String>['Pinot Noir', 'Cabernet Sauvignon', 'Sauvignon Blanc', 'Merlot'],
-      creatorEmail: 'admin@winery.com',
-    ),
-    Winery(
-      id: 'br_17',
-      name: 'Vinícola Thera',
-      city: 'Urupema (SC)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.rose},
-      distanceKm: 310.0,
-      rating: 4.8,
-      latitude: -27.9650,
-      longitude: -49.9610,
-      address: 'Fazenda Bom Retiro, s/n - Urupema - SC',
-      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      ],
-      responsibleName: 'João Paulo Tavares',
-      sommelierName: 'Diego Arrebola',
-      cultivatedGrapes: <String>['Sauvignon Blanc', 'Syrah', 'Cabernet Franc', 'Merlot'],
-      creatorEmail: 'admin@winery.com',
-    ),
-
-    // ==========================================
-    // --- BRASIL: SÃO PAULO & MINAS GERAIS ---
-    // ==========================================
     Winery(
       id: 'br_18',
       name: 'Vinícola Guaspari',
@@ -357,7 +234,7 @@ class WineryRepository extends ChangeNotifier {
       rating: 4.9,
       latitude: -22.1930,
       longitude: -46.7450,
-      address: 'Rua Pedro Ferrari, 300 - Centro, Espírito Santo do Pinhal - SP',
+      address: 'Rua Pedro Ferrari, 300 - Espírito Santo do Pinhal - SP',
       logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
       photoUrls: const <String>[
         'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
@@ -367,70 +244,9 @@ class WineryRepository extends ChangeNotifier {
       cultivatedGrapes: <String>['Syrah', 'Cabernet Sauvignon', 'Sauvignon Blanc', 'Viognier'],
       creatorEmail: 'admin@winery.com',
     ),
-    Winery(
-      id: 'br_19',
-      name: 'Vinícola Luiz Porto',
-      city: 'Caldas (MG)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.espumante},
-      distanceKm: 480.0,
-      rating: 4.8,
-      latitude: -21.9210,
-      longitude: -46.3850,
-      address: 'Fazenda Santana, s/n - Caldas - MG',
-      logoUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      ],
-      responsibleName: 'Luiz Porto',
-      sommelierName: 'Carlos Porto',
-      cultivatedGrapes: <String>['Syrah', 'Chardonnay', 'Sauvignon Blanc', 'Cabernet Franc'],
-      creatorEmail: 'admin@winery.com',
-    ),
-    Winery(
-      id: 'br_20',
-      name: 'Casa Geraldo',
-      city: 'Andradas (MG)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.espumante, WineType.rose},
-      distanceKm: 470.0,
-      rating: 4.7,
-      latitude: -22.0680,
-      longitude: -46.5710,
-      address: 'Av. Rodolfo Geraldo, 1557 - Andradas - MG',
-      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      ],
-      responsibleName: 'Geraldo Bordignon',
-      sommelierName: 'Patrícia Bordignon',
-      cultivatedGrapes: <String>['Syrah', 'Moscato', 'Cabernet Sauvignon', 'Chardonnay'],
-      creatorEmail: 'admin@winery.com',
-    ),
 
     // ==========================================
-    // --- BRASIL: VALE DO SÃO FRANCISCO (PE / BA) ---
-    // ==========================================
-    Winery(
-      id: 'br_21',
-      name: 'Vinícola Rio Sol',
-      city: 'Lagoa Grande (Vale do São Francisco - PE)',
-      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.espumante, WineType.rose},
-      distanceKm: 1850.0,
-      rating: 4.7,
-      latitude: -8.9950,
-      longitude: -40.1830,
-      address: 'Fazenda Planaltina, Rodovia PE-574 - Lagoa Grande - PE',
-      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      photoUrls: const <String>[
-        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      ],
-      responsibleName: 'Manoel Alves',
-      sommelierName: 'Luciano Lima',
-      cultivatedGrapes: <String>['Syrah', 'Chenin Blanc', 'Muscat', 'Tempranillo', 'Touriga Nacional'],
-      creatorEmail: 'admin@winery.com',
-    ),
-
-    // ==========================================
-    // --- PRINCIPAIS INTERNACIONAIS DE REFERÊNCIA ---
+    // --- FRANÇA (BORDEAUX, BORGONHA, CHAMPAGNE) ---
     // ==========================================
     Winery(
       id: 'fr_1',
@@ -452,6 +268,67 @@ class WineryRepository extends ChangeNotifier {
       creatorEmail: 'admin@winery.com',
     ),
     Winery(
+      id: 'fr_2',
+      name: 'Domaine de la Romanée-Conti',
+      city: 'Vosne-Romanée, Borgonha (França)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 8700.0,
+      rating: 5.0,
+      latitude: 47.1600,
+      longitude: 4.9540,
+      address: 'Place de l\'Église, 21700 Vosne-Romanée, França',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Aubert de Villaine',
+      sommelierName: 'Prieuré Roch',
+      cultivatedGrapes: <String>['Pinot Noir', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'fr_3',
+      name: 'Dom Pérignon / Champagne Moët & Chandon',
+      city: 'Épernay, Champagne (França)',
+      wineTypes: <WineType>{WineType.espumante},
+      distanceKm: 8900.0,
+      rating: 4.9,
+      latitude: 49.0420,
+      longitude: 3.9570,
+      address: '20 Avenue de Champagne, 51200 Épernay, França',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Vincent Chaperon',
+      sommelierName: 'Richard Geoffroy',
+      cultivatedGrapes: <String>['Chardonnay', 'Pinot Noir', 'Pinot Meunier'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'fr_4',
+      name: 'Château Lafite Rothschild',
+      city: 'Pauillac, Bordeaux (França)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 8550.0,
+      rating: 4.9,
+      latitude: 45.2180,
+      longitude: -0.7710,
+      address: '33250 Pauillac, França',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Saskia de Rothschild',
+      sommelierName: 'Eric Kohler',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Merlot', 'Cabernet Franc', 'Petit Verdot'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- ITÁLIA (TOSCANA, PIEMONTE, VÊNETO) ---
+    // ==========================================
+    Winery(
       id: 'it_1',
       name: 'Antinori nel Chianti Classico',
       city: 'San Casciano, Toscana (Itália)',
@@ -471,6 +348,151 @@ class WineryRepository extends ChangeNotifier {
       creatorEmail: 'admin@winery.com',
     ),
     Winery(
+      id: 'it_2',
+      name: 'Tenuta San Guido (Sassicaia)',
+      city: 'Bolgheri, Toscana (Itália)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 9750.0,
+      rating: 5.0,
+      latitude: 43.2310,
+      longitude: 10.6120,
+      address: 'Loc. San Guido, 57022 Bolgheri, Itália',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Priscilla Incisa della Rocchetta',
+      sommelierName: 'Giacomo Tachis',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Cabernet Franc'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'it_3',
+      name: 'Giacomo Conterno (Barolo)',
+      city: 'Monforte d\'Alba, Piemonte (Itália)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 9600.0,
+      rating: 4.9,
+      latitude: 44.5820,
+      longitude: 7.9730,
+      address: 'Località Ornati, 5, 12050 Monforte d\'Alba CN, Itália',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Roberto Conterno',
+      sommelierName: 'Giovanni Conterno',
+      cultivatedGrapes: <String>['Nebbiolo', 'Barbera'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- ESPANHA (RIBERA DEL DUERO, RIOJA) ---
+    // ==========================================
+    Winery(
+      id: 'es_1',
+      name: 'Bodegas Vega Sicilia',
+      city: 'Valbuena de Duero, Ribera del Duero (Espanha)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 8300.0,
+      rating: 5.0,
+      latitude: 41.6380,
+      longitude: -4.2810,
+      address: 'Finca Vega Sicilia, 47359 Valbuena de Duero, Espanha',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Pablo Álvarez',
+      sommelierName: 'Gonzalo Iturriaga',
+      cultivatedGrapes: <String>['Tempranillo (Tinto Fino)', 'Cabernet Sauvignon', 'Merlot'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'es_2',
+      name: 'Marqués de Riscal',
+      city: 'Elciego, Rioja Alavesa (Espanha)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.rose},
+      distanceKm: 8400.0,
+      rating: 4.8,
+      latitude: 42.5120,
+      longitude: -2.6180,
+      address: 'Calle Torrea, 1, 01340 Elciego, Álava, Espanha',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Alejandro Aznar',
+      sommelierName: 'Francisco Hurtado de Amézaga',
+      cultivatedGrapes: <String>['Tempranillo', 'Graciano', 'Mazuelo', 'Verdejo'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- PORTUGAL (DOURO, ALENTEJO, VINHO VERDE) ---
+    // ==========================================
+    Winery(
+      id: 'pt_1',
+      name: 'Quinta do Crasto',
+      city: 'Sabrosa, Douro (Portugal)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 7800.0,
+      rating: 4.9,
+      latitude: 41.1390,
+      longitude: -7.5680,
+      address: 'Gouvinhas, 5060-063 Sabrosa, Portugal',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Tomas Roquette',
+      sommelierName: 'Manuel Lobo',
+      cultivatedGrapes: <String>['Touriga Nacional', 'Touriga Franca', 'Tinta Roriz', 'Sousão'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'pt_2',
+      name: 'Herdade do Esporão',
+      city: 'Reguengos de Monsaraz, Alentejo (Portugal)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.rose},
+      distanceKm: 7700.0,
+      rating: 4.8,
+      latitude: 38.3810,
+      longitude: -7.5520,
+      address: 'Apartado 145, 7200-999 Reguengos de Monsaraz, Portugal',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'João Roquette',
+      sommelierName: 'David Baverstock',
+      cultivatedGrapes: <String>['Aragonez', 'Alicante Bouschet', 'Touriga Nacional', 'Antão Vaz'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'pt_3',
+      name: 'Casa Ferreirinha (Barca Velha)',
+      city: 'Vila Nova de Foz Côa, Douro (Portugal)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 7850.0,
+      rating: 5.0,
+      latitude: 41.0820,
+      longitude: -7.1410,
+      address: 'Quinta da Leda, Vila Nova de Foz Côa, Portugal',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Sogrape Vinhos',
+      sommelierName: 'Luís Sottomayor',
+      cultivatedGrapes: <String>['Touriga Nacional', 'Touriga Franca', 'Tinta Roriz', 'Tinto Cão'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- ARGENTINA (MENDOZA, SALTA) ---
+    // ==========================================
+    Winery(
       id: 'ar_1',
       name: 'Catena Zapata',
       city: 'Agrelo, Mendoza (Argentina)',
@@ -487,6 +509,193 @@ class WineryRepository extends ChangeNotifier {
       responsibleName: 'Laura Catena',
       sommelierName: 'Alejandro Vigil',
       cultivatedGrapes: <String>['Malbec', 'Cabernet Sauvignon', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'ar_2',
+      name: 'Zuccardi Valle de Uco',
+      city: 'San Carlos, Mendoza (Argentina)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 2450.0,
+      rating: 5.0,
+      latitude: -33.6550,
+      longitude: -69.1620,
+      address: 'Costa Canal Uco s/n, Paraje Altamira, Mendoza, Argentina',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Sebastián Zuccardi',
+      sommelierName: 'Laura Zuccardi',
+      cultivatedGrapes: <String>['Malbec', 'Cabernet Franc', 'Chardonnay', 'Bonarda'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'ar_3',
+      name: 'Bodega Colomé',
+      city: 'Molinos, Salta (Argentina)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 2900.0,
+      rating: 4.9,
+      latitude: -25.4380,
+      longitude: -66.3810,
+      address: 'Ruta Provincial 53 Km 20, Molinos, Salta, Argentina',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Donald Hess',
+      sommelierName: 'Thibaut Delmotte',
+      cultivatedGrapes: <String>['Malbec', 'Torrontés', 'Tannat', 'Cabernet Sauvignon'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- CHILE (VALE DO MAIPO, COLCHAGUA) ---
+    // ==========================================
+    Winery(
+      id: 'cl_1',
+      name: 'Concha y Toro (Don Melchor)',
+      city: 'Pirque, Vale do Maipo (Chile)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco, WineType.rose},
+      distanceKm: 2200.0,
+      rating: 4.8,
+      latitude: -33.6710,
+      longitude: -70.5820,
+      address: 'Av. Virginia Subercaseaux 210, Pirque, Región Metropolitana, Chile',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Enrique Tirado',
+      sommelierName: 'Marcelo Papa',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Carménère', 'Syrah', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'cl_2',
+      name: 'Viña Almaviva',
+      city: 'Puente Alto, Vale do Maipo (Chile)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 2210.0,
+      rating: 5.0,
+      latitude: -33.6120,
+      longitude: -70.5750,
+      address: 'Av. Santa Rosa 11440, Puente Alto, Chile',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Baron Philippe de Rothschild & Viña Concha y Toro',
+      sommelierName: 'Michel Rolland',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Carménère', 'Cabernet Franc', 'Petit Verdot'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- ESTADOS UNIDOS (NAPA VALLEY, CALIFORNIA) ---
+    // ==========================================
+    Winery(
+      id: 'us_1',
+      name: 'Opus One Winery',
+      city: 'Oakville, Napa Valley (EUA)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 10200.0,
+      rating: 4.9,
+      latitude: 38.4310,
+      longitude: -122.3880,
+      address: '7900 St Helena Hwy, Oakville, CA 94562, EUA',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Robert Mondavi & Baron Philippe de Rothschild',
+      sommelierName: 'Michael Silacci',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Merlot', 'Cabernet Franc', 'Petit Verdot', 'Malbec'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'us_2',
+      name: 'Robert Mondavi Winery',
+      city: 'Oakville, Napa Valley (EUA)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 10210.0,
+      rating: 4.8,
+      latitude: 38.4380,
+      longitude: -122.3850,
+      address: '7801 St Helena Hwy, Oakville, CA 94562, EUA',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'Robert Mondavi',
+      sommelierName: 'Genevieve Janssens',
+      cultivatedGrapes: <String>['Cabernet Sauvignon', 'Sauvignon Blanc (Fumé Blanc)', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- AUSTRÁLIA & NOVA ZELÂNDIA ---
+    // ==========================================
+    Winery(
+      id: 'au_1',
+      name: 'Penfolds Winery (Grange)',
+      city: 'Barossa Valley (Austrália)',
+      wineTypes: <WineType>{WineType.tinto, WineType.branco},
+      distanceKm: 13500.0,
+      rating: 4.9,
+      latitude: -34.5210,
+      longitude: 138.9550,
+      address: '78 Penfold Rd, Magill SA 5072, Austrália',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Peter Gago',
+      sommelierName: 'Max Schubert',
+      cultivatedGrapes: <String>['Shiraz (Syrah)', 'Cabernet Sauvignon', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+    Winery(
+      id: 'nz_1',
+      name: 'Cloudy Bay Vineyards',
+      city: 'Marlborough (Nova Zelândia)',
+      wineTypes: <WineType>{WineType.branco, WineType.tinto, WineType.espumante},
+      distanceKm: 12200.0,
+      rating: 4.9,
+      latitude: -41.5180,
+      longitude: 173.8650,
+      address: '230 Jackson Rd, Blenheim 7273, Nova Zelândia',
+      logoUrl: 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
+      ],
+      responsibleName: 'David Hohnen',
+      sommelierName: 'Jim White',
+      cultivatedGrapes: <String>['Sauvignon Blanc', 'Pinot Noir', 'Chardonnay'],
+      creatorEmail: 'admin@winery.com',
+    ),
+
+    // ==========================================
+    // --- ÁFRICA DO SUL (STELLENBOSCH) ---
+    // ==========================================
+    Winery(
+      id: 'za_1',
+      name: 'Kanonkop Wine Estate',
+      city: 'Stellenbosch (África do Sul)',
+      wineTypes: <WineType>{WineType.tinto},
+      distanceKm: 7100.0,
+      rating: 4.8,
+      latitude: -33.8550,
+      longitude: 18.8620,
+      address: 'R44, Elsenburg, Stellenbosch, 7599, África do Sul',
+      logoUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
+      photoUrls: const <String>[
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
+      ],
+      responsibleName: 'Johann Krige',
+      sommelierName: 'Abrie Beeslaar',
+      cultivatedGrapes: <String>['Pinotage', 'Cabernet Sauvignon', 'Cabernet Franc'],
       creatorEmail: 'admin@winery.com',
     ),
   ];
