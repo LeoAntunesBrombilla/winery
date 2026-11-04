@@ -66,11 +66,28 @@ class BlogRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Remove uma postagem do Blog Coletivo (Ação Exclusiva do Administrador Master)
+  void deletePost(String postId) {
+    _posts.removeWhere((p) => p.id == postId);
+    notifyListeners();
+  }
+
   /// Adiciona um comentário em uma publicação no Blog Coletivo
   void addComment(String postId, BlogComment comment) {
     final index = _posts.indexWhere((p) => p.id == postId);
     if (index != -1) {
       final updatedComments = List<BlogComment>.from(_posts[index].comments)..add(comment);
+      _posts[index] = _posts[index].copyWith(comments: updatedComments);
+      notifyListeners();
+    }
+  }
+
+  /// Remove um comentário no Blog Coletivo (Ação Exclusiva do Administrador Master)
+  void deleteComment(String postId, String commentId) {
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final updatedComments = List<BlogComment>.from(_posts[index].comments)
+        ..removeWhere((c) => c.id == commentId);
       _posts[index] = _posts[index].copyWith(comments: updatedComments);
       notifyListeners();
     }

@@ -4,7 +4,7 @@ import 'package:winery_finder/data/blog_repository.dart';
 import 'package:winery_finder/domain/blog_post.dart';
 import 'package:winery_finder/domain/user_account.dart';
 
-/// Tela do Blog Coletivo com publicações de Sommeliers e comentários de Vinícolas e Admiradores.
+/// Tela do Blog Coletivo com publicações de Sommeliers e controle de exclusão exclusivo do Administrador Master.
 class BlogScreen extends StatefulWidget {
   const BlogScreen({super.key});
 
@@ -145,6 +145,7 @@ class _BlogScreenState extends State<BlogScreen> {
     final theme = Theme.of(context);
     final currentUser = AuthRepository.instance.currentUser;
     final isSommelierOrAdmin = currentUser?.role == UserRole.sommelier || currentUser?.role == UserRole.admin;
+    final isAdmin = currentUser?.email == 'admin@winery.com';
 
     return Scaffold(
       appBar: AppBar(
@@ -207,6 +208,38 @@ class _BlogScreenState extends State<BlogScreen> {
                             '${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year}',
                             style: theme.textTheme.bodySmall,
                           ),
+                          if (isAdmin) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent),
+                              tooltip: 'Excluir Postagem (Ação Exclusiva do Admin)',
+                              onPressed: () {
+                                showDialog<void>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Excluir Postagem'),
+                                    content: Text('Tem certeza que deseja excluir a matéria "${post.title}"?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(ctx).pop(),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () {
+                                          BlogRepository.instance.deletePost(post.id);
+                                          Navigator.of(ctx).pop();
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Postagem excluída pelo administrador.')),
+                                          );
+                                        },
+                                        child: const Text('Excluir'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -246,24 +279,42 @@ class _BlogScreenState extends State<BlogScreen> {
                                 color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Column(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        comment.authorName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '(${comment.authorRole.label})',
-                                        style: TextStyle(fontSize: 11, color: theme.colorScheme.primary),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              comment.authorName,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '(${comment.authorRole.label})',
+                                              style: TextStyle(fontSize: 11, color: theme.colorScheme.primary),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(comment.text, style: const TextStyle(fontSize: 13)),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(comment.text, style: const TextStyle(fontSize: 13)),
+                                  if (isAdmin)
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                                      tooltip: 'Excluir Comentário',
+                                      onPressed: () {
+                                        BlogRepository.instance.deleteComment(post.id, comment.id);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Comentário removido pelo administrador.')),
+                                        );
+                                      },
+                                    ),
                                 ],
                               ),
                             );
