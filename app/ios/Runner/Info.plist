@@ -6,6 +6,8 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos sua localização para mostrar as vinícolas mais próximas.</string>
 	<key>GMSApiKey</key>
 	<string>$(MAPS_API_KEY)</string>
 	<key>CFBundleDisplayName</key>

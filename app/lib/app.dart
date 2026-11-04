@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:winery_finder/data/location_provider.dart';
+import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/features/home/home_shell.dart';
 
 /// Raiz do aplicativo: tema e tela inicial.
 class WineryFinderApp extends StatelessWidget {
-  const WineryFinderApp({super.key});
+  const WineryFinderApp({
+    this.repository = const EmptyWineryRepository(),
+    this.location = const NoLocationProvider(),
+    super.key,
+  });
+
+  final WineryRepository repository;
+  final LocationProvider location;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +26,7 @@ class WineryFinderApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeShell(),
+      home: HomeShell(repository: repository, location: location),
     );
   }
 }

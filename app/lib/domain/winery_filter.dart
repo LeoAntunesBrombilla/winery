@@ -7,7 +7,8 @@ import 'package:winery_finder/domain/winery.dart';
 abstract final class WineryFilter {
   /// Filtra por texto (nome ou cidade, sem diferenciar maiúsculas) e por
   /// tipos de vinho. Um conjunto vazio de tipos significa "todos".
-  /// O resultado vem ordenado da vinícola mais próxima para a mais distante.
+  /// O resultado vem ordenado da vinícola mais próxima para a mais distante;
+  /// sem distância (usuário sem localização), por nome.
   static List<Winery> apply(
     Iterable<Winery> wineries, {
     String query = '',
@@ -24,16 +25,44 @@ abstract final class WineryFilter {
       return matchesQuery && matchesType;
     }).toList();
 
-    result.sort((Winery a, Winery b) => a.distanceKm.compareTo(b.distanceKm));
+    result.sort(_byDistanceThenName);
     return result;
   }
 
-  /// Formata a distância para exibição: metros abaixo de 1 km, senão
-  /// quilômetros com uma casa decimal.
-  static String formatDistance(double distanceKm) {
-    if (distanceKm < 1) {
-      return '${(distanceKm * 1000).round()} m';
+  static int _byDistanceThenName(Winery a, Winery b) {
+    final double? da = a.distanceKm;
+    final double? db = b.distanceKm;
+    if (da != null && db != null && da != db) {
+      return da.compareTo(db);
     }
-    return '${distanceKm.toStringAsFixed(1)} km';
+    if (da != null && db == null) {
+      return -1;
+    }
+    if (da == null && db != null) {
+      return 1;
+    }
+    return _sortKey(a.name).compareTo(_sortKey(b.name));
   }
+
+  /// Minúsculas e sem acento, para "Álvaro" ficar junto de "Alvaro".
+  static String _sortKey(String name) {
+    const String accented = 'áàâãäéèêëíìîïóòôõöúùûüç';
+    const String plain = 'aaaaaeeeeiiiiooooouuuuc';
+    final StringBuffer key = StringBuffer();
+    for (final int rune in name.toLowerCase().runes) {
+      final String char = String.fromCharCode(rune);
+      final int index = accented.indexOf(char);
+      key.write(index < 0 ? char : plain[index]);
+    }
+    return key.toString();
+  }
+
+  /// Formata a distância em quilômetros com uma casa decimal e vírgula,
+  /// como pede a US02: "12,4 km", "0,7 km".
+  static String formatDistance(double distanceKm) =>
+      '${distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km';
+
+  /// Nota com uma casa decimal: "4,7".
+  static String formatRating(double rating) =>
+      rating.toStringAsFixed(1).replaceAll('.', ',');
 }
