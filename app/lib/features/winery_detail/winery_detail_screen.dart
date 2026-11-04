@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/features/winery_detail/opening_hours_section.dart';
+import 'package:winery_finder/features/winery_detail/rating_section.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
 
 /// Ficha da vinícola, aberta a partir do pin e da lista. As informações de
@@ -27,6 +28,9 @@ class WineryDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(winery.city, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          RatingSection(rating: winery.rating),
+          const SizedBox(height: 8),
           if (winery.address.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
