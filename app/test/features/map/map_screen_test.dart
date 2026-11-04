@@ -209,4 +209,86 @@ void main() {
       expect(find.textContaining('pin '), findsNWidgets(2));
     });
   });
+
+  group('busca por nome ou cidade (US03)', () {
+    final List<Winery> serra = <Winery>[
+      testWinery(
+        id: 'valduga',
+        name: 'Casa Valduga',
+        city: 'Bento Gonçalves',
+        coordinates: const Coordinates(-29.17, -51.52),
+      ),
+      testWinery(
+        id: 'garibaldi',
+        name: 'Cooperativa Garibaldi',
+        city: 'Garibaldi',
+        coordinates: const Coordinates(-29.25, -51.53),
+      ),
+      testWinery(
+        id: 'pinheiro',
+        name: 'Vinícola Pinheiro',
+        city: 'Pinheiro Machado',
+        coordinates: const Coordinates(-31.58, -53.38),
+      ),
+    ];
+
+    Future<void> search(WidgetTester tester, String text) async {
+      await tester.enterText(find.byType(TextField), text);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('filtra o mapa e a lista ignorando acentos', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      await search(tester, 'GONCALVES');
+      expect(find.text('pin Casa Valduga'), findsOneWidget);
+      expect(find.text('pin Cooperativa Garibaldi'), findsNothing);
+
+      await showList(tester);
+      expect(visibleOrder(tester), <String>['Casa Valduga']);
+    });
+
+    testWidgets('um caractere não filtra', (WidgetTester tester) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      await search(tester, 'g');
+
+      expect(find.textContaining('pin '), findsNWidgets(2));
+    });
+
+    testWidgets('busca alcança vinícolas fora dos 50 km', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+      expect(find.text('pin Vinícola Pinheiro'), findsNothing);
+
+      await search(tester, 'pinheiro machado');
+
+      expect(find.text('pin Vinícola Pinheiro'), findsOneWidget);
+    });
+
+    testWidgets('sem resultados mostra mensagem e limpa a busca', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      await search(tester, 'gramado');
+      expect(
+        find.text('Nenhuma vinícola encontrada para "gramado".'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Limpar busca'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Nenhuma vinícola'), findsNothing);
+      expect(find.textContaining('pin '), findsNWidgets(2));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        isEmpty,
+      );
+    });
+  });
 }
