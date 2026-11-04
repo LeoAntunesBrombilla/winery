@@ -40,6 +40,7 @@ Documentação da imersão, personas, mapas de empatia, storytelling e canvas do
 app/                    App Flutter (esqueleto com lint e testes) — veja app/README.md
 firebase/               Regras do Firestore/Storage e testes no emulador
 docs/modelo-de-dados.md Modelo da coleção wineries e regras de acesso
+docs/teste-de-usabilidade.md Roteiro e registro do teste com 5 pessoas (TT04)
 .github/workflows/      CI: formatação, lint e testes do app e das regras a cada push/PR
 Winery Finder.dc.html   Protótipo (Claude Design) — abre com support.js
 ios-frame.jsx           Componente de moldura do dispositivo usado no protótipo
