@@ -9,9 +9,11 @@ String validRow({
   String id = 'casa-valduga',
   String price = '85,00',
   String reservation = 'sim',
+  String weekdays = '09:00-18:00',
 }) =>
-    '$id,Casa Valduga,Bento Gonçalves,-29.1756,-51.5577,tinto;espumante,'
-    '"Seg a sáb, 9h às 17h","$price",$reservation,(54) 2105-3122,'
+    '$id,Casa Valduga,Bento Gonçalves,"Via Trento, 2355",-29.1756,-51.5577,'
+    'tinto;espumante,$weekdays,$weekdays,$weekdays,$weekdays,$weekdays,'
+    '09:00-17:00,fechado,"$price",$reservation,(54) 2105-3122,'
     'https://casavalduga.com.br,4.7,site,20/10/2026';
 
 /// [count] linhas válidas com ids distintos.

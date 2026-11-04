@@ -6,7 +6,7 @@ import 'package:winery_finder/catalog/firestore_rest.dart';
 import 'catalog_fixture.dart';
 
 void main() {
-  final DateTime importedAt = DateTime.utc(2026, 10, 26, 12);
+  final DateTime updatedAt = DateTime.utc(2026, 10, 26, 12);
   final CatalogEntry entry = CatalogSheet.parse(
     sheet(<String>[validRow()]),
     checkCount: false,
@@ -17,7 +17,7 @@ void main() {
       final Map<String, Object> body = FirestoreRest.commitBody(
         'winery-dev',
         <CatalogEntry>[entry],
-        importedAt: importedAt,
+        updatedAt: updatedAt,
       );
 
       final List<Object> writes = body['writes']! as List<Object>;
@@ -37,7 +37,7 @@ void main() {
         Map<String, Object> commit() => FirestoreRest.commitBody(
           'winery-dev',
           <CatalogEntry>[entry],
-          importedAt: importedAt,
+          updatedAt: updatedAt,
         );
 
         expect(commit(), commit());
@@ -49,10 +49,35 @@ void main() {
     test('converte para os tipos do Firestore', () {
       final Map<String, Object> fields = FirestoreRest.fields(
         entry,
-        importedAt: importedAt,
+        updatedAt: updatedAt,
       );
 
       expect(fields['name'], <String, String>{'stringValue': 'Casa Valduga'});
+      expect(fields['address'], <String, String>{
+        'stringValue': 'Via Trento, 2355',
+      });
+      final Map<String, Object> days =
+          ((fields['openingHours']! as Map<String, Object>)['mapValue']!
+                  as Map<String, Object>)['fields']!
+              as Map<String, Object>;
+      expect(days.keys, <String>[
+        'mon',
+        'tue',
+        'wed',
+        'thu',
+        'fri',
+        'sat',
+        'sun',
+      ]);
+      expect(days['sat'], <String, Object>{
+        'mapValue': <String, Object>{
+          'fields': <String, Object>{
+            'open': <String, String>{'stringValue': '09:00'},
+            'close': <String, String>{'stringValue': '17:00'},
+          },
+        },
+      });
+      expect(days['sun'], <String, Object?>{'nullValue': null});
       expect(fields['location'], <String, Object>{
         'geoPointValue': <String, double>{
           'latitude': -29.1756,
@@ -84,7 +109,8 @@ void main() {
           },
         },
       });
-      expect(fields['importedAt'], <String, String>{
+      expect(fields.containsKey('photos'), isFalse);
+      expect(fields['updatedAt'], <String, String>{
         'timestampValue': '2026-10-26T12:00:00.000Z',
       });
     });
@@ -92,14 +118,15 @@ void main() {
     test('campos opcionais vazios viram null', () {
       final CatalogEntry bare = CatalogSheet.parse(
         sheet(<String>[
-          'aurora,Aurora,Bento,-29.16,-51.51,branco,9h,0,não,,,,site,01/10/2026',
+          'aurora,Aurora,Bento,Rua B,-29.16,-51.51,branco,9h-17h,9h-17h,9h-17h,'
+              '9h-17h,9h-17h,fechado,fechado,0,não,,,,site,01/10/2026',
         ]),
         checkCount: false,
       ).entries.single;
 
       final Map<String, Object> fields = FirestoreRest.fields(
         bare,
-        importedAt: importedAt,
+        updatedAt: updatedAt,
       );
 
       for (final String name in <String>['phone', 'website', 'rating']) {
@@ -113,16 +140,23 @@ void main() {
   group('FirestoreRest.missingRequiredFields', () {
     test('documento importado tem tudo preenchido', () {
       final Map<String, Object?> document = <String, Object?>{
-        'fields': FirestoreRest.fields(entry, importedAt: importedAt),
+        'fields': FirestoreRest.fields(entry, updatedAt: updatedAt),
       };
 
       expect(FirestoreRest.missingRequiredFields(document), isEmpty);
     });
 
-    test('aponta horário vazio, preço e reserva ausentes', () {
+    test('aponta horário incompleto, preço e reserva ausentes', () {
       final Map<String, Object?> document = <String, Object?>{
         'fields': <String, Object?>{
-          'openingHours': <String, Object?>{'stringValue': '  '},
+          'address': <String, Object?>{'stringValue': 'Rua A'},
+          'openingHours': <String, Object?>{
+            'mapValue': <String, Object?>{
+              'fields': <String, Object?>{
+                'mon': <String, Object?>{'nullValue': null},
+              },
+            },
+          },
           'requiresReservation': <String, Object?>{'nullValue': null},
         },
       };

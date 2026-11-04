@@ -3,41 +3,37 @@ import 'package:winery_finder/domain/coordinates.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
 
+import '../support/winery_fixture.dart';
+
 void main() {
-  const Winery valduga = Winery(
+  final Winery valduga = testWinery(
     id: '1',
     name: 'Casa Valduga',
     city: 'Bento Gonçalves',
-    coordinates: Coordinates(-29.17, -51.52),
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.tinto, WineType.espumante},
     distanceKm: 12.4,
     rating: 4.7,
-    tastingPriceCents: 0,
-    requiresReservation: false,
   );
-  const Winery aurora = Winery(
+  final Winery aurora = testWinery(
     id: '2',
     name: 'Vinícola Aurora',
     city: 'Bento Gonçalves',
-    coordinates: Coordinates(-29.17, -51.52),
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.branco},
     distanceKm: 3.2,
     rating: 4.3,
-    tastingPriceCents: 0,
-    requiresReservation: false,
   );
-  const Winery miolo = Winery(
+  final Winery miolo = testWinery(
     id: '3',
     name: 'Miolo',
     city: 'Vale dos Vinhedos',
-    coordinates: Coordinates(-29.17, -51.52),
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.tinto, WineType.rose},
     distanceKm: 0.65,
     rating: 4.8,
-    tastingPriceCents: 0,
-    requiresReservation: false,
   );
-  const List<Winery> all = <Winery>[valduga, aurora, miolo];
+  final List<Winery> all = <Winery>[valduga, aurora, miolo];
 
   group('WineryFilter.apply', () {
     test('sem filtros devolve todas ordenadas por distância', () {
@@ -172,17 +168,16 @@ void main() {
       expect(WineryFilter.formatRating(4.75), '4,8');
       expect(WineryFilter.formatRating(4), '4,0');
     });
+
+    test('sem nota', () {
+      expect(WineryFilter.formatRating(null), 'Sem nota');
+    });
   });
 }
 
-Winery _named(String name, {double? distanceKm}) => Winery(
+Winery _named(String name, {double? distanceKm}) => testWinery(
   id: name,
   name: name,
-  city: 'Bento Gonçalves',
   coordinates: const Coordinates(-29.17, -51.52),
-  wineTypes: const <WineType>{WineType.tinto},
-  rating: 4,
-  tastingPriceCents: 0,
-  requiresReservation: false,
   distanceKm: distanceKm,
 );

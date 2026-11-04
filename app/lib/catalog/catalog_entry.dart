@@ -1,3 +1,4 @@
+import 'package:winery_finder/domain/weekly_hours.dart';
 import 'package:winery_finder/domain/winery.dart';
 
 /// Como a informação da vinícola foi conferida antes da carga.
@@ -18,6 +19,7 @@ class CatalogEntry {
     required this.id,
     required this.name,
     required this.city,
+    required this.address,
     required this.latitude,
     required this.longitude,
     required this.wineTypes,
@@ -36,12 +38,13 @@ class CatalogEntry {
   final String id;
   final String name;
   final String city;
+  final String address;
   final double latitude;
   final double longitude;
   final Set<WineType> wineTypes;
 
-  /// Horário de funcionamento como texto livre, ex.: "Seg a sáb, 9h às 17h".
-  final String openingHours;
+  /// Horário de funcionamento de cada dia da semana.
+  final WeeklyHours openingHours;
 
   /// Preço da degustação por pessoa, em centavos. Zero = gratuita.
   final int tastingPriceCents;

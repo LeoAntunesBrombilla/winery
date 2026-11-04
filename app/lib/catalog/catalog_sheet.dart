@@ -1,5 +1,6 @@
 import 'package:winery_finder/catalog/catalog_entry.dart';
 import 'package:winery_finder/catalog/csv_reader.dart';
+import 'package:winery_finder/domain/weekly_hours.dart';
 import 'package:winery_finder/domain/winery.dart';
 
 /// Problema encontrado numa linha da planilha. `line` é a linha no arquivo
@@ -34,10 +35,11 @@ abstract final class CatalogSheet {
     'id',
     'nome',
     'cidade',
+    'endereco',
     'latitude',
     'longitude',
     'tipos_vinho',
-    'horario',
+    ...dayColumns,
     'preco_degustacao',
     'reserva_obrigatoria',
     'telefone',
@@ -45,6 +47,18 @@ abstract final class CatalogSheet {
     'nota',
     'fonte_verificacao',
     'data_verificacao',
+  ];
+
+  /// Uma coluna de horário por dia, de segunda a domingo: "09:00-17:00"
+  /// ou "fechado".
+  static const List<String> dayColumns = <String>[
+    'seg',
+    'ter',
+    'qua',
+    'qui',
+    'sex',
+    'sab',
+    'dom',
   ];
 
   static const Set<String> _optional = <String>{'telefone', 'site', 'nota'};
@@ -152,6 +166,23 @@ abstract final class CatalogSheet {
       }
     }
 
+    final Map<int, OpeningInterval> days = <int, OpeningInterval>{};
+    for (int i = 0; i < dayColumns.length; i++) {
+      final String raw = cells[dayColumns[i]]!;
+      if (raw.toLowerCase() == 'fechado') {
+        continue;
+      }
+      final OpeningInterval? interval = OpeningInterval.tryParse(raw);
+      if (interval == null) {
+        errors.add(
+          '${dayColumns[i]}: horário "$raw" inválido (use 09:00-17:00 ou '
+          'fechado)',
+        );
+      } else {
+        days[i + 1] = interval;
+      }
+    }
+
     final int? priceCents = _parsePriceCents(cells['preco_degustacao']!);
     if (priceCents == null) {
       errors.add('preço "${cells['preco_degustacao']}" inválido (use 85,00)');
@@ -189,10 +220,11 @@ abstract final class CatalogSheet {
       id: id,
       name: cells['nome']!,
       city: cells['cidade']!,
+      address: cells['endereco']!,
       latitude: latitude!,
       longitude: longitude!,
       wineTypes: wineTypes,
-      openingHours: cells['horario']!,
+      openingHours: WeeklyHours(days),
       tastingPriceCents: priceCents!,
       requiresReservation: requiresReservation!,
       verificationSource: source!,

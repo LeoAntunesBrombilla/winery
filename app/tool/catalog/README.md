@@ -6,10 +6,10 @@ como CSV (UTF-8, separado por vírgulas) mantendo o cabeçalho.
 | Coluna | Obrigatória | Formato |
 |---|---|---|
 | `id` | sim | slug estável, ex.: `casa-valduga`. **Nunca mude depois da 1ª carga** — é o id do documento e evita duplicar. |
-| `nome`, `cidade` | sim | texto |
+| `nome`, `cidade`, `endereco` | sim | texto |
 | `latitude`, `longitude` | sim | decimal, ex.: `-29.1756` |
 | `tipos_vinho` | sim | `tinto`, `branco`, `espumante`, `rose`, separados por `;` |
-| `horario` | sim | texto livre, ex.: `Seg a sáb, 9h às 17h` |
+| `seg`, `ter`, `qua`, `qui`, `sex`, `sab`, `dom` | sim | horário do dia, ex.: `09:00-17:00` (também aceita `9h-17h`), ou `fechado` |
 | `preco_degustacao` | sim | reais por pessoa, ex.: `85,00`; `0` = gratuita |
 | `reserva_obrigatoria` | sim | `sim` ou `não` |
 | `telefone`, `site` | não | texto |

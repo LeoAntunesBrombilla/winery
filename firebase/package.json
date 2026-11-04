@@ -1,0 +1,15 @@
+{
+  "name": "winery-finder-firebase",
+  "private": true,
+  "description": "Regras do Firestore e do Storage do Winery Finder e seus testes.",
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore,storage --project demo-winery-finder \"node --test tests/\"",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1",
+    "firebase-tools": "^13.35.1"
+  }
+}
