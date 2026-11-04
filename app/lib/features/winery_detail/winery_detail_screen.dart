@@ -5,6 +5,7 @@ import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/features/winery_detail/contact_section.dart';
 import 'package:winery_finder/features/winery_detail/opening_hours_section.dart';
 import 'package:winery_finder/features/winery_detail/rating_section.dart';
+import 'package:winery_finder/widgets/favorite_button.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
 import 'package:winery_finder/widgets/route_button.dart';
 
@@ -30,7 +31,10 @@ class WineryDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(winery.name)),
+      appBar: AppBar(
+        title: Text(winery.name),
+        actions: <Widget>[FavoriteButton(winery: winery)],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
