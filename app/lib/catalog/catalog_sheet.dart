@@ -1,5 +1,6 @@
 import 'package:winery_finder/catalog/catalog_entry.dart';
 import 'package:winery_finder/catalog/csv_reader.dart';
+import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/weekly_hours.dart';
 import 'package:winery_finder/domain/winery.dart';
 
@@ -64,7 +65,6 @@ abstract final class CatalogSheet {
   static const Set<String> _optional = <String>{'telefone', 'site', 'nota'};
 
   static final RegExp _slug = RegExp(r'^[a-z0-9]+(-[a-z0-9]+)*$');
-  static final RegExp _price = RegExp(r'^\d+([.,]\d{1,2})?$');
   static final RegExp _date = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$');
 
   /// Valida a planilha inteira. Com [checkCount], exige entre
@@ -183,7 +183,7 @@ abstract final class CatalogSheet {
       }
     }
 
-    final int? priceCents = _parsePriceCents(cells['preco_degustacao']!);
+    final int? priceCents = TastingPrice.parseCents(cells['preco_degustacao']!);
     if (priceCents == null) {
       errors.add('preço "${cells['preco_degustacao']}" inválido (use 85,00)');
     }
@@ -237,20 +237,6 @@ abstract final class CatalogSheet {
 
   static double? _parseDecimal(String raw) =>
       double.tryParse(raw.replaceAll(',', '.'));
-
-  /// "85", "85,5" e "85,50" viram 8500, 8550 e 8550 centavos.
-  static int? _parsePriceCents(String raw) {
-    final String value = raw.replaceFirst(RegExp(r'^R\$\s*'), '');
-    if (!_price.hasMatch(value)) {
-      return null;
-    }
-    final List<String> parts = value.split(RegExp('[.,]'));
-    final int reais = int.parse(parts.first);
-    final int cents = parts.length == 1
-        ? 0
-        : int.parse(parts[1].padRight(2, '0'));
-    return reais * 100 + cents;
-  }
 
   static bool? _parseYesNo(String raw) {
     switch (raw.toLowerCase()) {

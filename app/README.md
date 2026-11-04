@@ -63,6 +63,19 @@ Deve aparecer o mapa com um pin na Casa Valduga; **Traçar rota** abre o Google
 Maps (Android) ou o Apple Maps (iOS). Mapa cinza = chave ausente ou sem
 restrição correta.
 
+### 4. App do admin do catálogo (US17)
+
+O cadastro de vinícolas é um app separado, no mesmo código, para a equipe:
+
+```sh
+flutter run -t lib/main_admin.dart
+```
+
+Para alguém virar admin: crie o usuário em **Authentication** (e-mail e
+senha) e, no **Firestore**, um documento `admins/{uid}` com o UID dele (veja
+`docs/modelo-de-dados.md`). Sem esse documento, o login é recusado e as
+regras bloqueiam qualquer gravação.
+
 ## Comandos
 
 ```sh
@@ -80,6 +93,8 @@ flutter test --coverage                           # testes + coverage/lcov.info
 lib/
   main.dart                  Ponto de entrada (inicializa o Firebase)
   main_spike.dart            Ponto de entrada do spike de mapa e rota
+  main_admin.dart            Ponto de entrada do app do admin (US17)
+  admin/                     Login, listagem e formulário do catálogo
   bootstrap.dart             Inicialização do Firebase
   app.dart                   MaterialApp e tema
   catalog/                   Leitura/validação da planilha da carga inicial (US32)
