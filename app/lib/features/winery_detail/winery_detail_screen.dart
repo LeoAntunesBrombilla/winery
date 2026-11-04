@@ -6,6 +6,7 @@ import 'package:winery_finder/features/winery_detail/contact_section.dart';
 import 'package:winery_finder/features/winery_detail/opening_hours_section.dart';
 import 'package:winery_finder/features/winery_detail/rating_section.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
+import 'package:winery_finder/widgets/route_button.dart';
 
 /// Ficha da vinícola, aberta a partir do pin e da lista. As informações de
 /// decisão (endereço, reserva, preço) ficam no topo, visíveis sem rolar.
@@ -67,6 +68,8 @@ class WineryDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+          RouteButton(destination: winery.coordinates, openUrl: openUrl),
+          const SizedBox(height: 8),
           ContactSection(
             phone: winery.phone,
             website: winery.website,

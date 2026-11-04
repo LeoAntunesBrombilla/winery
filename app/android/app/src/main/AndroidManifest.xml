@@ -54,6 +54,11 @@
             <action android:name="android.intent.action.DIAL"/>
             <data android:scheme="tel"/>
         </intent>
+        <!-- Navegação do Google Maps (US10). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="google.navigation"/>
+        </intent>
         <!-- Abrir a rota no app de navegação (url_launcher). -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
