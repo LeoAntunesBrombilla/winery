@@ -16,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real do endereço do usuário até a vinícola destacado.
+/// Aba Mapa: exibe o mapa interativo livre no topo (sem cobrir) e os detalhes/lista no painel inferior.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -32,7 +32,7 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas/rodovias
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas
   LatLng _routeOriginPoint = _defaultOrigin; // Coordenadas do endereço do usuário
   String _routeInfoText = ''; // Distância e tempo do trajeto real
 
@@ -49,7 +49,7 @@ class _MapScreenState extends State<MapScreen> {
 
     LatLng originPoint = _defaultOrigin;
 
-    // 1. Geocodifica o endereço do usuário via OpenStreetMap Nominatim para obter latitude e longitude reais
+    // 1. Geocodifica o endereço do usuário via OpenStreetMap Nominatim
     if (userAddress.isNotEmpty) {
       try {
         final geoUrl = Uri.parse(
@@ -77,7 +77,7 @@ class _MapScreenState extends State<MapScreen> {
 
     final destination = LatLng(winery.latitude, winery.longitude);
 
-    // 2. Busca a rota real pelas ruas/rodovias entre o endereço do usuário e a vinícola
+    // 2. Busca a rota real pelas ruas/rodovias
     final osrmEndpoints = [
       'https://router.project-osrm.org/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
       'https://routing.openstreetmap.de/routed-car/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
@@ -156,10 +156,6 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _openGoogleMapsRoute(Winery winery) async {
     await _fetchRealRoadRoute(winery);
 
-    if (mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-
     final userAddress = AuthRepository.instance.currentUser?.address ?? '';
     final String originParam = userAddress.isNotEmpty ? Uri.encodeComponent(userAddress) : '';
     final String destinationParam = Uri.encodeComponent('${winery.name}, ${winery.address}');
@@ -187,399 +183,331 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _showWineryDetails(Winery winery) {
+  void _selectWinery(Winery winery) {
     setState(() => _selectedWinery = winery);
-    _mapController.move(LatLng(winery.latitude, winery.longitude), 14.0);
+    _mapController.move(LatLng(winery.latitude, winery.longitude), 13.5);
+  }
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final currentUserEmail = AuthRepository.instance.currentUser?.email;
-        final bool canModify = currentUserEmail == winery.creatorEmail || currentUserEmail == 'admin@winery.com';
+  /// Painel Inferior de Detalhes da Vinícola (NÃO COBRE O MAPA)
+  Widget _buildWineryDetailsPanel(Winery winery, ThemeData theme) {
+    final currentUserEmail = AuthRepository.instance.currentUser?.email;
+    final bool canModify = currentUserEmail == winery.creatorEmail || currentUserEmail == 'admin@winery.com';
 
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return AnimatedBuilder(
-              animation: WineRepository.instance,
-              builder: (context, _) {
-                final wineryWines = WineRepository.instance.getWinesForWinery(winery.id);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: AnimatedBuilder(
+        animation: WineRepository.instance,
+        builder: (context, _) {
+          final wineryWines = WineRepository.instance.getWinesForWinery(winery.id);
 
-                return SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Barra superior do painel com botão de voltar à lista
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => setState(() => _selectedWinery = null),
+                      icon: const Icon(Icons.arrow_back, size: 18),
+                      label: const Text('Voltar à Lista de Vinícolas'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => setState(() => _selectedWinery = null),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: winery.logoUrl.isNotEmpty
+                          ? ClipOval(
+                              child: winery.logoUrl.startsWith('http')
+                                  ? Image.network(
+                                      winery.logoUrl,
+                                      width: 52,
+                                      height: 52,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar, size: 26),
+                                    )
+                                  : Image.file(
+                                      File(winery.logoUrl),
+                                      width: 52,
+                                      height: 52,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar, size: 26),
+                                    ),
+                            )
+                          : const Icon(Icons.wine_bar, size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: 28,
+                          Text(winery.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                          Text(winery.city, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+                        ],
+                      ),
+                    ),
+                    AnimatedBuilder(
+                      animation: FavoritesRepository.instance,
+                      builder: (context, _) {
+                        final isFav = FavoritesRepository.instance.isFavorite(winery.id);
+                        return IconButton(
+                          icon: Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav ? Colors.redAccent : null,
+                            size: 24,
+                          ),
+                          onPressed: () {
+                            FavoritesRepository.instance.toggleFavorite(winery.id);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Botões de Trajeto e Navegação
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => _fetchRealRoadRoute(winery),
+                        icon: const Icon(Icons.alt_route, size: 18),
+                        label: const Text('Trajeto Real no Mapa', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      onPressed: () => _openGoogleMapsRoute(winery),
+                      icon: const Icon(Icons.map, size: 20),
+                      tooltip: 'Abrir no Google Maps',
+                    ),
+                  ],
+                ),
+                if (canModify) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (_) => EditWineryDialog(winery: winery),
+                          );
+                        },
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: const Text('Editar Vinícola'),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent, size: 20),
+                        tooltip: 'Excluir Vinícola',
+                        onPressed: () {
+                          WineryRepository.instance.deleteWinery(winery.id);
+                          setState(() => _selectedWinery = null);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Vinícola "${winery.name}" foi excluída.')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+                const Divider(height: 16),
+                if (winery.address.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text('Endereço: ${winery.address}', style: theme.textTheme.bodySmall),
+                  ),
+                Text('Distância: ${WineryFilter.formatDistance(winery.distanceKm)}', style: theme.textTheme.bodySmall),
+                if (winery.responsibleName.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('Responsável: ${winery.responsibleName}', style: theme.textTheme.bodySmall),
+                  ),
+                if (winery.sommelierName.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text('Sommelier: ${winery.sommelierName}', style: theme.textTheme.bodySmall),
+                  ),
+                if (winery.cultivatedGrapes.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: winery.cultivatedGrapes.map((g) => Chip(label: Text(g, style: const TextStyle(fontSize: 11)), padding: EdgeInsets.zero)).toList(),
+                  ),
+                ],
+                // Seção do Painel de Produtos para a Vinícola Criadora
+                if (canModify) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => WineryProductsPanel(winery: winery),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.inventory, size: 16),
+                      label: const Text('Painel de Produtos'),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (wineryWines.isNotEmpty) ...[
+                  Text('Vinhos Disponíveis:', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: wineryWines.length,
+                    itemBuilder: (context, i) {
+                      final wine = wineryWines[i];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(wine.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          subtitle: Text('R\$ ${wine.price.toStringAsFixed(2)} • ${wine.type.label}'),
+                          trailing: wine.paymentLink.isNotEmpty
+                              ? TextButton(
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Link de pagamento: ${wine.paymentLink}')),
+                                    );
+                                  },
+                                  child: const Text('Comprar'),
+                                )
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Painel Inferior com Lista de Vinícolas Próximas
+  Widget _buildWineriesListPanel(List<Winery> filteredWineries, ThemeData theme) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              'Vinícolas Próximas (${filteredWineries.length})',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: filteredWineries.isEmpty
+                ? const Center(child: Text('Nenhuma vinícola encontrada.'))
+                : ListView.builder(
+                    itemCount: filteredWineries.length,
+                    itemBuilder: (context, index) {
+                      final winery = filteredWineries[index];
+                      final isSelected = _selectedWinery?.id == winery.id;
+                      return Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          selected: isSelected,
+                          selectedTileColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                          leading: CircleAvatar(
                             backgroundColor: theme.colorScheme.primaryContainer,
                             child: winery.logoUrl.isNotEmpty
                                 ? ClipOval(
                                     child: winery.logoUrl.startsWith('http')
                                         ? Image.network(
                                             winery.logoUrl,
-                                            width: 56,
-                                            height: 56,
+                                            width: 40,
+                                            height: 40,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar, size: 28),
+                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar),
                                           )
                                         : Image.file(
                                             File(winery.logoUrl),
-                                            width: 56,
-                                            height: 56,
+                                            width: 40,
+                                            height: 40,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar, size: 28),
+                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar),
                                           ),
                                   )
-                                : const Icon(Icons.wine_bar, size: 28),
+                                : const Icon(Icons.wine_bar),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(winery.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 4),
-                                Text(winery.city, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.primary)),
-                              ],
-                            ),
-                          ),
-                          AnimatedBuilder(
-                            animation: FavoritesRepository.instance,
-                            builder: (context, _) {
-                              final isFav = FavoritesRepository.instance.isFavorite(winery.id);
-                              return IconButton(
-                                icon: Icon(
-                                  isFav ? Icons.favorite : Icons.favorite_border,
-                                  color: isFav ? Colors.redAccent : null,
-                                  size: 28,
-                                ),
-                                onPressed: () {
-                                  FavoritesRepository.instance.toggleFavorite(winery.id);
-                                },
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          Row(
+                          title: Text(winery.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('${winery.city} • ${WineryFilter.formatDistance(winery.distanceKm)}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 20),
-                              const SizedBox(width: 4),
-                              Text(winery.rating.toStringAsFixed(1), style: theme.textTheme.titleMedium),
+                              IconButton(
+                                icon: const Icon(Icons.alt_route, color: Color(0xFF722F37)),
+                                tooltip: 'Trajeto Real do Seu Endereço',
+                                onPressed: () => _fetchRealRoadRoute(winery),
+                              ),
+                              AnimatedBuilder(
+                                animation: FavoritesRepository.instance,
+                                builder: (context, _) {
+                                  final isFav = FavoritesRepository.instance.isFavorite(winery.id);
+                                  return IconButton(
+                                    icon: Icon(
+                                      isFav ? Icons.favorite : Icons.favorite_border,
+                                      color: isFav ? Colors.redAccent : null,
+                                      size: 22,
+                                    ),
+                                    onPressed: () {
+                                      FavoritesRepository.instance.toggleFavorite(winery.id);
+                                    },
+                                  );
+                                },
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Botões de Trajeto pelas Ruas e Navegação do Seu Endereço
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _fetchRealRoadRoute(winery);
-                              },
-                              icon: const Icon(Icons.alt_route, size: 20),
-                              label: const Text('Trajeto Real no Mapa', style: TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton.filledTonal(
-                            onPressed: () => _openGoogleMapsRoute(winery),
-                            icon: const Icon(Icons.map, size: 22),
-                            tooltip: 'Abrir no Google Maps',
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 24),
-                      if (canModify) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                showDialog<void>(
-                                  context: context,
-                                  builder: (_) => EditWineryDialog(winery: winery),
-                                );
-                              },
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('Editar Vinícola'),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent),
-                              tooltip: 'Excluir Vinícola',
-                              onPressed: () {
-                                WineryRepository.instance.deleteWinery(winery.id);
-                                Navigator.of(context).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Vinícola "${winery.name}" foi excluída.')),
-                                );
-                              },
-                            ),
-                          ],
+                          onTap: () => _selectWinery(winery),
                         ),
-                        const SizedBox(height: 12),
-                      ],
-                      if (winery.address.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on_outlined, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text('Endereço: ${winery.address}', style: theme.textTheme.bodyMedium)),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Row(
-                        children: [
-                          const Icon(Icons.directions_car_outlined, size: 20),
-                          const SizedBox(width: 8),
-                          Text('Distância: ${WineryFilter.formatDistance(winery.distanceKm)}', style: theme.textTheme.bodyMedium),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Icon(Icons.account_circle_outlined, size: 20),
-                          const SizedBox(width: 8),
-                          Text('Cadastrado por: ${winery.creatorEmail}', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (winery.responsibleName.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.person_outline, size: 20),
-                            const SizedBox(width: 8),
-                            Text('Responsável: ${winery.responsibleName}', style: theme.textTheme.bodyMedium),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      if (winery.sommelierName.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.local_bar_outlined, size: 20),
-                            const SizedBox(width: 8),
-                            Text('Sommelier: ${winery.sommelierName}', style: theme.textTheme.bodyMedium),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      if (winery.cultivatedGrapes.isNotEmpty) ...[
-                        Text('Uvas Cultivadas:', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: winery.cultivatedGrapes.map((g) => Chip(label: Text(g))).toList(),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Text('Tipos de Vinho:', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        children: winery.wineTypes.map((t) => Chip(label: Text(t.label), backgroundColor: theme.colorScheme.primaryContainer)).toList(),
-                      ),
-
-                      // Seção do Painel de Produtos para a Vinícola Criadora
-                      if (canModify) ...[
-                        const Divider(height: 24),
-                        Center(
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => WineryProductsPanel(winery: winery),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.inventory, size: 18),
-                            label: const Text('Painel de Produtos'),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      if (wineryWines.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text('Nenhum vinho postado para venda por esta vinícola ainda.'),
-                        )
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: wineryWines.length,
-                          itemBuilder: (context, i) {
-                            final wine = wineryWines[i];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: wine.imageUrl.isNotEmpty
-                                              ? (wine.imageUrl.startsWith('http')
-                                                  ? Image.network(
-                                                      wine.imageUrl,
-                                                      width: 60,
-                                                      height: 60,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (ctx, err, stack) => Container(
-                                                        width: 60,
-                                                        height: 60,
-                                                        color: const Color(0xFF722F37),
-                                                        child: const Icon(Icons.wine_bar, color: Colors.white),
-                                                      ),
-                                                    )
-                                                  : Image.file(
-                                                      File(wine.imageUrl),
-                                                      width: 60,
-                                                      height: 60,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (ctx, err, stack) => Container(
-                                                        width: 60,
-                                                        height: 60,
-                                                        color: const Color(0xFF722F37),
-                                                        child: const Icon(Icons.wine_bar, color: Colors.white),
-                                                      ),
-                                                    ))
-                                              : Container(
-                                                  width: 60,
-                                                  height: 60,
-                                                  color: const Color(0xFF722F37),
-                                                  child: const Icon(Icons.wine_bar, color: Colors.white),
-                                                ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(wine.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${wine.type.label} • Safra: ${wine.vintage}${wine.grape.isNotEmpty ? " • Uva: ${wine.grape}" : ""}',
-                                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              if (wine.description.isNotEmpty)
-                                                Text(wine.description, style: theme.textTheme.bodyMedium),
-                                            ],
-                                          ),
-                                        ),
-                                        Text(
-                                          'R\$ ${wine.price.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.colorScheme.primary,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (wine.paymentLink.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: OutlinedButton.icon(
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Link de pagamento: ${wine.paymentLink}')),
-                                            );
-                                          },
-                                          icon: const Icon(Icons.payment, size: 18),
-                                          label: const Text('Comprar / Pagamento Direct'),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      if (winery.photoUrls.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Text('Fotos:', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 100,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: winery.photoUrls.length,
-                            itemBuilder: (context, i) {
-                              final photoPath = winery.photoUrls[i];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: photoPath.startsWith('http')
-                                      ? Image.network(
-                                          photoPath,
-                                          width: 140,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (ctx, err, stack) => Container(
-                                            width: 140,
-                                            color: theme.colorScheme.surfaceContainerHighest,
-                                            child: const Icon(Icons.broken_image),
-                                          ),
-                                        )
-                                      : Image.file(
-                                          File(photoPath),
-                                          width: 140,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (ctx, err, stack) => Container(
-                                            width: 140,
-                                            color: theme.colorScheme.surfaceContainerHighest,
-                                            child: const Icon(Icons.broken_image),
-                                          ),
-                                        ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            );
-          },
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 
@@ -642,7 +570,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
               body: Column(
                 children: [
-                  // Search & Filter bar
+                  // Barra de Busca e Filtros
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
@@ -689,7 +617,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View com Trajeto Real em Ruas/Rodovias Destacado
+                  // Visão do Mapa (100% LIVRE NO TOPO, NUNCA É COBERTA)
                   Expanded(
                     flex: 3,
                     child: Stack(
@@ -705,17 +633,15 @@ class _MapScreenState extends State<MapScreen> {
                               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                               userAgentPackageName: 'com.winery.winery_finder',
                             ),
-                            // Trajeto Real pelas Ruas/Rodovias DESTACADO (PolylineLayer Duplo com Destaque Dourado/Amber e Cor Vinho)
+                            // Trajeto Real pelas Ruas DESTACADO (PolylineLayer)
                             if (_routeWinery != null && _routePoints.isNotEmpty)
                               PolylineLayer(
                                 polylines: [
-                                  // Camada 1: Borda de Destaque Dourado/Amarelo Neon
                                   Polyline(
                                     points: _routePoints,
                                     strokeWidth: 11.0,
                                     color: Colors.amberAccent,
                                   ),
-                                  // Camada 2: Linha Principal Cor Vinho
                                   Polyline(
                                     points: _routePoints,
                                     strokeWidth: 6.0,
@@ -725,7 +651,6 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                             MarkerLayer(
                               markers: [
-                                // Marcador do Usuário/Endereço de Partida (GPS Azul)
                                 if (_routeWinery != null)
                                   Marker(
                                     point: _routeOriginPoint,
@@ -741,7 +666,7 @@ class _MapScreenState extends State<MapScreen> {
                                     width: 48,
                                     height: 48,
                                     child: GestureDetector(
-                                      onTap: () => _showWineryDetails(winery),
+                                      onTap: () => _selectWinery(winery),
                                       child: Icon(
                                         Icons.location_on,
                                         size: isRouteTarget ? 50 : (isSelected ? 44 : 36),
@@ -756,7 +681,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Trajeto Real do Endereço do Usuário com Destaque
+                        // Banner Flutuante de Trajeto Ativo
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
@@ -826,104 +751,12 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Wineries List View
+                  // Painel Inferior Dividido (NÃO COBRE O MAPA): Detalhes ou Lista de Vinícolas
                   Expanded(
                     flex: 2,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, -3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                            child: Text(
-                              'Vinícolas Próximas (${filteredWineries.length})',
-                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: filteredWineries.isEmpty
-                                ? const Center(child: Text('Nenhuma vinícola encontrada.'))
-                                : ListView.builder(
-                                    itemCount: filteredWineries.length,
-                                    itemBuilder: (context, index) {
-                                      final winery = filteredWineries[index];
-                                      final isSelected = _selectedWinery?.id == winery.id;
-                                      return Material(
-                                        color: Colors.transparent,
-                                        child: ListTile(
-                                          selected: isSelected,
-                                          selectedTileColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                          leading: CircleAvatar(
-                                            backgroundColor: theme.colorScheme.primaryContainer,
-                                            child: winery.logoUrl.isNotEmpty
-                                                ? ClipOval(
-                                                    child: winery.logoUrl.startsWith('http')
-                                                        ? Image.network(
-                                                            winery.logoUrl,
-                                                            width: 40,
-                                                            height: 40,
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar),
-                                                          )
-                                                        : Image.file(
-                                                            File(winery.logoUrl),
-                                                            width: 40,
-                                                            height: 40,
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder: (ctx, err, stack) => const Icon(Icons.wine_bar),
-                                                          ),
-                                                  )
-                                                : const Icon(Icons.wine_bar),
-                                          ),
-                                          title: Text(winery.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                          subtitle: Text('${winery.city} • ${WineryFilter.formatDistance(winery.distanceKm)}'),
-                                          trailing: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Botão "Como Chegar" (desenha o trajeto real das ruas no mapa)
-                                              IconButton(
-                                                icon: const Icon(Icons.alt_route, color: Color(0xFF722F37)),
-                                                tooltip: 'Trajeto Real do Seu Endereço',
-                                                onPressed: () => _fetchRealRoadRoute(winery),
-                                              ),
-                                              AnimatedBuilder(
-                                                animation: FavoritesRepository.instance,
-                                                builder: (context, _) {
-                                                  final isFav = FavoritesRepository.instance.isFavorite(winery.id);
-                                                  return IconButton(
-                                                    icon: Icon(
-                                                      isFav ? Icons.favorite : Icons.favorite_border,
-                                                      color: isFav ? Colors.redAccent : null,
-                                                      size: 22,
-                                                    ),
-                                                    onPressed: () {
-                                                      FavoritesRepository.instance.toggleFavorite(winery.id);
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                          onTap: () => _showWineryDetails(winery),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: _selectedWinery != null
+                        ? _buildWineryDetailsPanel(_selectedWinery!, theme)
+                        : _buildWineriesListPanel(filteredWineries, theme),
                   ),
                 ],
               ),
