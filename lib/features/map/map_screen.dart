@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -15,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, rota ("Como Chegar pelo Google Maps"), lista, detalhes e vinhos.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias, lista e navegação Google Maps.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -31,31 +32,89 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas
+  String _routeInfoText = ''; // Distância e tempo de viagem real
 
-  void _drawRouteTo(Winery winery) {
+  /// Busca e desenha o trajeto real pelas ruas/rodovias (OpenStreetMap / OSRM Routing)
+  Future<void> _fetchRealRoadRoute(Winery winery) async {
     setState(() {
       _routeWinery = winery;
       _selectedWinery = winery;
+      _routePoints = <LatLng>[_userOrigin, LatLng(winery.latitude, winery.longitude)];
+      _routeInfoText = 'Calculando trajeto real pelas ruas...';
     });
 
-    final bounds = LatLngBounds.fromPoints([
-      _userOrigin,
-      LatLng(winery.latitude, winery.longitude),
-    ]);
+    final destination = LatLng(winery.latitude, winery.longitude);
 
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: bounds,
-        padding: const EdgeInsets.all(60.0),
-      ),
-    );
+    try {
+      final url = Uri.parse(
+        'https://router.project-osrm.org/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      );
+      final client = HttpClient();
+      final request = await client.getUrl(url);
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.transform(utf8.decoder).join();
+        final Map<String, dynamic> data = jsonDecode(responseBody) as Map<String, dynamic>;
+        final List<dynamic>? routes = data['routes'] as List<dynamic>?;
+
+        if (routes != null && routes.isNotEmpty) {
+          final Map<String, dynamic> routeData = Map<String, dynamic>.from(routes[0] as Map);
+          final Map<String, dynamic> geometry = Map<String, dynamic>.from(routeData['geometry'] as Map);
+          final List<dynamic> coordinates = geometry['coordinates'] as List<dynamic>;
+
+          final points = coordinates.map((coord) {
+            final list = coord as List<dynamic>;
+            return LatLng((list[1] as num).toDouble(), (list[0] as num).toDouble());
+          }).toList();
+
+          final num distanceMeters = routeData['distance'] as num;
+          final num durationSeconds = routeData['duration'] as num;
+          final durationMinutes = (durationSeconds / 60).round();
+          final distKm = (distanceMeters / 1000).toStringAsFixed(1);
+
+          if (mounted) {
+            setState(() {
+              _routePoints = points;
+              _routeInfoText = 'Trajeto Real: $distKm km • ~$durationMinutes min de viagem';
+            });
+
+            final bounds = LatLngBounds.fromPoints(points);
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: bounds,
+                padding: const EdgeInsets.all(50.0),
+              ),
+            );
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao buscar rota OSRM: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _routePoints = <LatLng>[_userOrigin, destination];
+        _routeInfoText = 'Distância: ${WineryFilter.formatDistance(winery.distanceKm)}';
+      });
+      final bounds = LatLngBounds.fromPoints([_userOrigin, destination]);
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(50.0),
+        ),
+      );
+    }
   }
 
   /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
   Future<void> _openGoogleMapsRoute(Winery winery) async {
-    _drawRouteTo(winery);
+    await _fetchRealRoadRoute(winery);
 
-    if (Navigator.of(context).canPop()) {
+    if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
 
@@ -184,18 +243,26 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Botão "Como Chegar pelo Google Maps"
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: FilledButton.icon(
-                          onPressed: () => _openGoogleMapsRoute(winery),
-                          icon: const Icon(Icons.map, size: 22),
-                          label: const Text(
-                            'Como Chegar (Abrir Rota no Google Maps)',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      // Botões de Trajeto e Navegação
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _fetchRealRoadRoute(winery);
+                              },
+                              icon: const Icon(Icons.alt_route, size: 20),
+                              label: const Text('Trajeto Real no Mapa', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
+                            onPressed: () => _openGoogleMapsRoute(winery),
+                            icon: const Icon(Icons.map, size: 22),
+                            tooltip: 'Abrir no Google Maps',
+                          ),
+                        ],
                       ),
                       const Divider(height: 24),
                       if (canModify) ...[
@@ -290,6 +357,7 @@ class _MapScreenState extends State<MapScreen> {
                         spacing: 6,
                         children: winery.wineTypes.map((t) => Chip(label: Text(t.label), backgroundColor: theme.colorScheme.primaryContainer)).toList(),
                       ),
+
                       // Seção do Painel de Produtos para a Vinícola Criadora
                       if (canModify) ...[
                         const Divider(height: 24),
@@ -572,7 +640,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View com Rota e Banners
+                  // Map View com Trajeto Real em Ruas/Rodovias e Opção de Seguir no Google Maps
                   Expanded(
                     flex: 3,
                     child: Stack(
@@ -588,16 +656,13 @@ class _MapScreenState extends State<MapScreen> {
                               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                               userAgentPackageName: 'com.winery.winery_finder',
                             ),
-                            // Linha de Rota ("Como Chegar")
-                            if (_routeWinery != null)
+                            // Trajeto Real pelas Ruas/Rodovias (PolylineLayer)
+                            if (_routeWinery != null && _routePoints.isNotEmpty)
                               PolylineLayer(
                                 polylines: [
                                   Polyline(
-                                    points: [
-                                      _userOrigin,
-                                      LatLng(_routeWinery!.latitude, _routeWinery!.longitude),
-                                    ],
-                                    strokeWidth: 5.0,
+                                    points: _routePoints,
+                                    strokeWidth: 5.5,
                                     color: const Color(0xFF722F37), // Cor Vinho
                                   ),
                                 ],
@@ -635,46 +700,64 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Rota Ativa com atalho para Google Maps
+                        // Card/Banner de Trajeto Real Ativo com Botão "Seguir Rota no Google Maps"
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
                             left: 10,
                             right: 10,
                             child: Card(
-                              elevation: 6,
+                              elevation: 8,
                               color: theme.colorScheme.surface,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                child: Row(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.directions, color: Color(0xFF722F37), size: 28),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            'Rota: ${_routeWinery!.name}',
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.alt_route, color: Color(0xFF722F37), size: 28),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                _routeWinery!.name,
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                              ),
+                                              Text(
+                                                _routeInfoText.isNotEmpty
+                                                    ? _routeInfoText
+                                                    : 'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)}',
+                                                style: TextStyle(color: theme.colorScheme.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
                                           ),
-                                          Text(
-                                            'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)} • Google Maps',
-                                            style: TextStyle(color: theme.colorScheme.primary, fontSize: 12),
-                                          ),
-                                        ],
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close, size: 20),
+                                          tooltip: 'Limpar Rota',
+                                          onPressed: () => setState(() {
+                                            _routeWinery = null;
+                                            _routePoints = [];
+                                          }),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 40,
+                                      child: FilledButton.icon(
+                                        onPressed: () => _openGoogleMapsRoute(_routeWinery!),
+                                        icon: const Icon(Icons.navigation, size: 18),
+                                        label: const Text(
+                                          'Seguir Rota com GPS no Google Maps',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.map_outlined, color: Colors.blueAccent),
-                                      tooltip: 'Abrir no Google Maps',
-                                      onPressed: () => _openGoogleMapsRoute(_routeWinery!),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.close, size: 20),
-                                      tooltip: 'Limpar Rota',
-                                      onPressed: () => setState(() => _routeWinery = null),
                                     ),
                                   ],
                                 ),
@@ -684,7 +767,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Wineries List View com botão "Como Chegar pelo Google Maps"
+                  // Wineries List View
                   Expanded(
                     flex: 2,
                     child: DecoratedBox(
@@ -749,11 +832,11 @@ class _MapScreenState extends State<MapScreen> {
                                           trailing: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              // Botão "Como Chegar pelo Google Maps"
+                                              // Botão "Como Chegar" (desenha o trajeto real das ruas no mapa)
                                               IconButton(
-                                                icon: const Icon(Icons.directions_outlined, color: Color(0xFF722F37)),
-                                                tooltip: 'Como Chegar no Google Maps',
-                                                onPressed: () => _openGoogleMapsRoute(winery),
+                                                icon: const Icon(Icons.alt_route, color: Color(0xFF722F37)),
+                                                tooltip: 'Trajeto Real pelas Ruas',
+                                                onPressed: () => _fetchRealRoadRoute(winery),
                                               ),
                                               AnimatedBuilder(
                                                 animation: FavoritesRepository.instance,
