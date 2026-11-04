@@ -2,28 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:winery_finder/data/location_provider.dart';
 import 'package:winery_finder/data/winery_repository.dart';
 import 'package:winery_finder/domain/coordinates.dart';
+import 'package:winery_finder/domain/nearby.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
 import 'package:winery_finder/features/map/winery_list.dart';
+import 'package:winery_finder/features/map/winery_map.dart';
 import 'package:winery_finder/features/winery_detail/winery_detail_screen.dart';
 import 'package:winery_finder/widgets/placeholder_screen.dart';
 
-/// Desenha o mapa com os pins das vinícolas recebidas (US01).
+/// Desenha o mapa com os pins de [selection] (US01).
 typedef WineryMapBuilder = Widget Function(
   BuildContext context,
-  List<Winery> wineries,
-  ValueChanged<Winery> onSelected,
+  NearbySelection selection,
+  ValueChanged<Winery> onOpenDetail,
 );
 
 enum _MapView { map, list }
 
-/// Aba Mapa: alterna entre o mapa e a lista por proximidade (US02). As duas
-/// visões recebem o mesmo conjunto de vinícolas, na mesma ordem.
+/// Aba Mapa: alterna entre o mapa (US01) e a lista por proximidade (US02).
+/// As duas visões recebem o mesmo conjunto de vinícolas, na mesma ordem.
 class MapScreen extends StatefulWidget {
   const MapScreen({
     this.repository = const EmptyWineryRepository(),
     this.location = const NoLocationProvider(),
-    this.mapBuilder = _placeholderMap,
+    this.mapBuilder = _googleMap,
     super.key,
   });
 
@@ -31,12 +33,12 @@ class MapScreen extends StatefulWidget {
   final LocationProvider location;
   final WineryMapBuilder mapBuilder;
 
-  static Widget _placeholderMap(
+  static Widget _googleMap(
     BuildContext context,
-    List<Winery> wineries,
-    ValueChanged<Winery> onSelected,
+    NearbySelection selection,
+    ValueChanged<Winery> onOpenDetail,
   ) {
-    return Center(child: Text('${wineries.length} vinícolas no mapa'));
+    return WineryMap(selection: selection, onOpenDetail: onOpenDetail);
   }
 
   @override
@@ -45,16 +47,17 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   _MapView _view = _MapView.map;
-  late final Future<List<Winery>> _wineries = _load();
+  late final Future<NearbySelection> _selection = _load();
 
-  Future<List<Winery>> _load() async {
+  Future<NearbySelection> _load() async {
     final (List<Winery> wineries, Coordinates? user) = await (
       widget.repository.fetchAll(),
       widget.location.current(),
     ).wait;
-    return WineryFilter.apply(
+    final List<Winery> sorted = WineryFilter.apply(
       wineries.map((Winery w) => w.withDistanceFrom(user)),
     );
+    return Nearby.select(sorted, user);
   }
 
   void _openDetail(Winery winery) {
@@ -67,22 +70,23 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Winery>>(
-      future: _wineries,
-      builder: (BuildContext context, AsyncSnapshot<List<Winery>> snapshot) {
+    return FutureBuilder<NearbySelection>(
+      future: _selection,
+      builder: (BuildContext context, AsyncSnapshot<NearbySelection> snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final List<Winery> wineries = snapshot.data ?? const <Winery>[];
-        if (wineries.isEmpty) {
+        final NearbySelection? selection = snapshot.data;
+        if (selection == null || selection.wineries.isEmpty) {
           return const PlaceholderScreen(
             title: 'Mapa',
             message: 'Vinícolas próximas aparecerão aqui.',
             icon: Icons.map_outlined,
           );
         }
+        final String? notice = Nearby.notice(selection.mode);
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mapa'),
@@ -110,15 +114,58 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
-          body: switch (_view) {
-            _MapView.map => widget.mapBuilder(context, wineries, _openDetail),
-            _MapView.list => WineryList(
-              wineries: wineries,
-              onSelected: _openDetail,
-            ),
-          },
+          body: Column(
+            children: <Widget>[
+              if (notice != null) _Notice(notice),
+              Expanded(
+                child: switch (_view) {
+                  _MapView.map => widget.mapBuilder(
+                    context,
+                    selection,
+                    _openDetail,
+                  ),
+                  _MapView.list => WineryList(
+                    wineries: selection.wineries,
+                    onSelected: _openDetail,
+                  ),
+                },
+              ),
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: colors.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              Icons.location_off_outlined,
+              color: colors.onSecondaryContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: colors.onSecondaryContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

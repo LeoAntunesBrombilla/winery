@@ -17,7 +17,7 @@ void main() {
     );
 
     expect(find.text('Casa Valduga'), findsOneWidget);
-    expect(find.text('Bento Gonçalves'), findsOneWidget);
+    expect(find.text('Bento Gonçalves · ★ 4,7'), findsOneWidget);
     expect(find.text('Reserva obrigatória'), findsOneWidget);
   });
 
@@ -58,5 +58,25 @@ void main() {
     await tester.pump();
 
     expect(opened.single.toString(), contains('-29.1756,-51.5577'));
+  });
+
+  testWidgets('mostra distância e nota, e Ver ficha abre a ficha (US01)', (
+    WidgetTester tester,
+  ) async {
+    int opened = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WineryPinCard(
+            winery: testWinery(distanceKm: 3.24, rating: null),
+            onTap: () => opened++,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Bento Gonçalves · 3,2 km · ★ Sem nota'), findsOneWidget);
+    await tester.tap(find.text('Ver ficha'));
+    expect(opened, 1);
   });
 }
