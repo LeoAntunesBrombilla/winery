@@ -33,7 +33,7 @@ void main() {
     await tester.tap(find.text('Traçar rota'));
     await tester.pump();
 
-    expect(opened.single.queryParameters['destination'], '-29.1756,-51.5577');
+    expect(opened.first.toString(), contains('-29.1756,-51.5577'));
     expect(find.byType(SnackBar), findsNothing);
   });
 

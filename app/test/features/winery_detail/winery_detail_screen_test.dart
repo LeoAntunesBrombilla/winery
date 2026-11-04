@@ -164,4 +164,26 @@ void main() {
 
     expect(opened.map((Uri u) => u.scheme), <String>['tel', 'https']);
   });
+
+  testWidgets('ficha tem Como chegar até a vinícola (US10)', (
+    WidgetTester tester,
+  ) async {
+    final List<Uri> opened = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WineryDetailScreen(
+          winery: testWinery(),
+          openUrl: (Uri uri) async {
+            opened.add(uri);
+            return true;
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Como chegar'));
+    await tester.pump();
+
+    expect(opened.single.toString(), contains('-29.1756,-51.5577'));
+  });
 }

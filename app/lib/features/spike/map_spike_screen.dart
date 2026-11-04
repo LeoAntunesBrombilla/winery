@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:winery_finder/data/url_opener.dart';
-import 'package:winery_finder/features/spike/route_link.dart';
+import 'package:winery_finder/domain/coordinates.dart';
+import 'package:winery_finder/domain/route_link.dart';
 
 /// Desenha o mapa centrado no pin. Injetável para os testes de widget, que
 /// não têm a view nativa do Google Maps.
@@ -37,13 +38,13 @@ class MapSpikeScreen extends StatelessWidget {
   }
 
   Future<void> _openRoute(BuildContext context) async {
-    final Uri uri = RouteLink.directions(
-      latitude: pin.latitude,
-      longitude: pin.longitude,
-      platform: Theme.of(context).platform,
-    );
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    if (!await openUrl(uri)) {
+    final bool opened = await RouteLink.open(
+      openUrl,
+      Coordinates(pin.latitude, pin.longitude),
+      Theme.of(context).platform,
+    );
+    if (!opened) {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Não foi possível abrir o app de navegação.'),

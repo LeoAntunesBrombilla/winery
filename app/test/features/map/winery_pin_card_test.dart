@@ -35,4 +35,28 @@ void main() {
 
     expect(taps, 1);
   });
+
+  testWidgets('card do pin tem Como chegar até a vinícola (US10)', (
+    WidgetTester tester,
+  ) async {
+    final List<Uri> opened = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WineryPinCard(
+            winery: testWinery(),
+            openUrl: (Uri uri) async {
+              opened.add(uri);
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Como chegar'));
+    await tester.pump();
+
+    expect(opened.single.toString(), contains('-29.1756,-51.5577'));
+  });
 }
