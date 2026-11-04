@@ -138,4 +138,30 @@ void main() {
       expect(find.byType(RatingStars), findsNothing);
     });
   });
+
+  testWidgets('ficha mostra Ligar e Site quando há contato (US08)', (
+    WidgetTester tester,
+  ) async {
+    final List<Uri> opened = <Uri>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WineryDetailScreen(
+          winery: testWinery(
+            phone: '(54) 2105-3122',
+            website: 'https://casavalduga.com.br',
+          ),
+          openUrl: (Uri uri) async {
+            opened.add(uri);
+            return true;
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Ligar'));
+    await tester.tap(find.text('Site'));
+    await tester.pump();
+
+    expect(opened.map((Uri u) => u.scheme), <String>['tel', 'https']);
+  });
 }
