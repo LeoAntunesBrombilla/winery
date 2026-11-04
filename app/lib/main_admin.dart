@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:winery_finder/admin/admin_app.dart';
 import 'package:winery_finder/admin/admin_services.dart';
+import 'package:winery_finder/admin/photo_services.dart';
 import 'package:winery_finder/bootstrap.dart';
 
 /// App do admin do catálogo (US17): `flutter run -t lib/main_admin.dart`.
@@ -27,6 +29,11 @@ Future<void> main() async {
         FirebaseFirestore.instance,
       ),
       store: FirestoreAdminWineryStore(FirebaseFirestore.instance),
+      photos: FirebasePhotoStore(
+        FirebaseStorage.instance,
+        FirebaseFirestore.instance,
+      ),
+      picker: ImagePickerPhotoPicker(),
     ),
   );
 }
