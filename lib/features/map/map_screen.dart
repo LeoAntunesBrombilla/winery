@@ -16,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias, lista e navegação Google Maps.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias, gastos estimados de viagem e Google Maps.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -32,81 +32,107 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas
-  String _routeInfoText = ''; // Distância e tempo de viagem real
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas/rodovias
+  String _routeInfoText = ''; // Distância e tempo de viagem real pelas ruas
 
-  /// Busca e desenha o trajeto real pelas ruas/rodovias (OpenStreetMap / OSRM Routing)
+  // Estimativa de Gastos da Viagem
+  double _routeFuelCost = 0.0;
+  double _routeTollCost = 0.0;
+  double _routeTotalCost = 0.0;
+
+  /// Busca e desenha o trajeto real pelas ruas/rodovias e calcula os gastos estimados
   Future<void> _fetchRealRoadRoute(Winery winery) async {
     setState(() {
       _routeWinery = winery;
       _selectedWinery = winery;
-      _routePoints = <LatLng>[_userOrigin, LatLng(winery.latitude, winery.longitude)];
-      _routeInfoText = 'Calculando trajeto real pelas ruas...';
+      _routePoints = <LatLng>[]; // Limpa pontos para carregar trajeto das ruas
+      _routeInfoText = 'Calculando caminho pelas ruas e rodovias...';
+      _routeFuelCost = 0.0;
+      _routeTollCost = 0.0;
+      _routeTotalCost = 0.0;
     });
 
     final destination = LatLng(winery.latitude, winery.longitude);
 
-    try {
-      final url = Uri.parse(
-        'https://router.project-osrm.org/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
-      );
-      final client = HttpClient();
-      final request = await client.getUrl(url);
-      final response = await request.close();
+    final osrmEndpoints = [
+      'https://router.project-osrm.org/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+    ];
 
-      if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final Map<String, dynamic> data = jsonDecode(responseBody) as Map<String, dynamic>;
-        final List<dynamic>? routes = data['routes'] as List<dynamic>?;
+    for (final endpoint in osrmEndpoints) {
+      try {
+        final url = Uri.parse(endpoint);
+        final client = HttpClient();
+        client.connectionTimeout = const Duration(seconds: 8);
+        final request = await client.getUrl(url);
+        final response = await request.close();
 
-        if (routes != null && routes.isNotEmpty) {
-          final Map<String, dynamic> routeData = Map<String, dynamic>.from(routes[0] as Map);
-          final Map<String, dynamic> geometry = Map<String, dynamic>.from(routeData['geometry'] as Map);
-          final List<dynamic> coordinates = geometry['coordinates'] as List<dynamic>;
+        if (response.statusCode == 200) {
+          final responseBody = await response.transform(utf8.decoder).join();
+          final Map<String, dynamic> data = jsonDecode(responseBody) as Map<String, dynamic>;
+          final List<dynamic>? routes = data['routes'] as List<dynamic>?;
 
-          final points = coordinates.map((coord) {
-            final list = coord as List<dynamic>;
-            return LatLng((list[1] as num).toDouble(), (list[0] as num).toDouble());
-          }).toList();
+          if (routes != null && routes.isNotEmpty) {
+            final Map<String, dynamic> routeData = Map<String, dynamic>.from(routes[0] as Map);
+            final Map<String, dynamic> geometry = Map<String, dynamic>.from(routeData['geometry'] as Map);
+            final List<dynamic> coordinates = geometry['coordinates'] as List<dynamic>;
 
-          final num distanceMeters = routeData['distance'] as num;
-          final num durationSeconds = routeData['duration'] as num;
-          final durationMinutes = (durationSeconds / 60).round();
-          final distKm = (distanceMeters / 1000).toStringAsFixed(1);
+            final points = coordinates.map((coord) {
+              final list = coord as List<dynamic>;
+              return LatLng((list[1] as num).toDouble(), (list[0] as num).toDouble());
+            }).toList();
 
-          if (mounted) {
-            setState(() {
-              _routePoints = points;
-              _routeInfoText = 'Trajeto Real: $distKm km • ~$durationMinutes min de viagem';
-            });
+            final num distanceMeters = routeData['distance'] as num;
+            final num durationSeconds = routeData['duration'] as num;
+            final durationMinutes = (durationSeconds / 60).round();
+            final double distKmValue = distanceMeters / 1000.0;
+            final distKm = distKmValue.toStringAsFixed(1);
 
-            final bounds = LatLngBounds.fromPoints(points);
-            _mapController.fitCamera(
-              CameraFit.bounds(
-                bounds: bounds,
-                padding: const EdgeInsets.all(50.0),
-              ),
-            );
+            // Cálculo dos gastos de viagem (Combustível & Pedágios nas rodovias)
+            final double fuelCost = (distKmValue / 10.0) * 6.10; // Média 10km/L a R$ 6,10/L
+            final int estimatedTolls = (distKmValue / 70.0).floor();
+            final double tollCost = estimatedTolls * 8.50; // Média R$ 8,50 por praça
+            final double totalCost = fuelCost + tollCost;
+
+            if (mounted) {
+              setState(() {
+                _routePoints = points;
+                _routeFuelCost = fuelCost;
+                _routeTollCost = tollCost;
+                _routeTotalCost = totalCost;
+                _routeInfoText = 'Caminho pelas Ruas: $distKm km • ~$durationMinutes min';
+              });
+
+              if (points.isNotEmpty) {
+                final bounds = LatLngBounds.fromPoints(points);
+                _mapController.fitCamera(
+                  CameraFit.bounds(
+                    bounds: bounds,
+                    padding: const EdgeInsets.all(50.0),
+                  ),
+                );
+              }
+            }
+            return;
           }
-          return;
         }
+      } catch (e) {
+        debugPrint('Erro no servidor OSRM ($endpoint): $e');
       }
-    } catch (e) {
-      debugPrint('Erro ao buscar rota OSRM: $e');
     }
 
     if (mounted) {
+      final double distKmValue = winery.distanceKm;
+      final double fuelCost = (distKmValue / 10.0) * 6.10;
+      final int estimatedTolls = (distKmValue / 70.0).floor();
+      final double tollCost = estimatedTolls * 8.50;
+
       setState(() {
-        _routePoints = <LatLng>[_userOrigin, destination];
-        _routeInfoText = 'Distância: ${WineryFilter.formatDistance(winery.distanceKm)}';
+        _routeFuelCost = fuelCost;
+        _routeTollCost = tollCost;
+        _routeTotalCost = fuelCost + tollCost;
+        _routeInfoText = 'Caminho pelas ruas indisponível offline. Toque em Seguir no Google Maps.';
       });
-      final bounds = LatLngBounds.fromPoints([_userOrigin, destination]);
-      _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(50.0),
-        ),
-      );
     }
   }
 
@@ -243,7 +269,7 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Botões de Trajeto e Navegação
+                      // Botões de Trajeto pelas Ruas e Navegação
                       Row(
                         children: [
                           Expanded(
@@ -640,7 +666,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View com Trajeto Real em Ruas/Rodovias e Opção de Seguir no Google Maps
+                  // Map View com Trajeto Real em Ruas/Rodovias e Estimativa de Gastos
                   Expanded(
                     flex: 3,
                     child: Stack(
@@ -700,7 +726,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Trajeto Real Ativo com Botão "Seguir Rota no Google Maps"
+                        // Card/Banner de Trajeto Real Ativo com Gastos da Viagem (Combustível & Pedágios)
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
@@ -745,6 +771,41 @@ class _MapScreenState extends State<MapScreen> {
                                           }),
                                         ),
                                       ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Painel de Gastos da Viagem
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              const Text('⛽ Combustível', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                              Text('R\$ ${_routeFuelCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                            ],
+                                          ),
+                                          Container(width: 1, height: 24, color: Colors.grey.withValues(alpha: 0.4)),
+                                          Column(
+                                            children: [
+                                              const Text('🛣️ Pedágios', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                              Text('R\$ ${_routeTollCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                            ],
+                                          ),
+                                          Container(width: 1, height: 24, color: Colors.grey.withValues(alpha: 0.4)),
+                                          Column(
+                                            children: [
+                                              const Text('💰 Gasto Total', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                              Text('R\$ ${_routeTotalCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.greenAccent)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     SizedBox(
