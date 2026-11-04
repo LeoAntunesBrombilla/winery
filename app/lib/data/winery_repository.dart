@@ -17,22 +17,56 @@ class EmptyWineryRepository implements WineryRepository {
 }
 
 /// Lê a coleção `wineries` gravada pela carga inicial (US32).
+///
+/// Com a persistência offline do Firestore (US19), o que já foi carregado
+/// fica no aparelho: sem rede, ou com rede lenta além de [serverTimeout],
+/// a lista vem do cache.
 class FirestoreWineryRepository implements WineryRepository {
-  FirestoreWineryRepository(this._firestore);
+  FirestoreWineryRepository(
+    this._firestore, {
+    this.serverTimeout = const Duration(seconds: 4),
+  });
 
   final FirebaseFirestore _firestore;
+  final Duration serverTimeout;
+
+  /// Liga o cache em disco sem limite de tamanho (o catálogo é pequeno).
+  static void enableOfflineCache(FirebaseFirestore firestore) {
+    firestore.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  }
 
   @override
   Future<List<Winery>> fetchAll() async {
-    final QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
-        .collection('wineries')
-        .get();
+    final CollectionReference<Map<String, dynamic>> collection = _firestore
+        .collection('wineries');
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await serverOrCache(
+      server: () => collection.get(const GetOptions(source: Source.server)),
+      cache: () => collection.get(const GetOptions(source: Source.cache)),
+      timeout: serverTimeout,
+    );
     return snapshot.docs
         .map(
           (QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
               wineryFromFirestore(doc.id, doc.data()),
         )
         .toList();
+  }
+}
+
+/// Busca no servidor e, se ele falhar ou passar de [timeout], usa o
+/// cache. Separado do Firestore para ser testado sem rede.
+Future<T> serverOrCache<T>({
+  required Future<T> Function() server,
+  required Future<T> Function() cache,
+  required Duration timeout,
+}) async {
+  try {
+    return await server().timeout(timeout);
+  } on Object {
+    return cache();
   }
 }
 
