@@ -16,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias destacado e navegação.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real do endereço do usuário até a vinícola destacado.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -32,7 +32,8 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas/rodovias
+  LatLng _routeOriginPoint = _defaultOrigin; // Coordenadas do endereço do usuário
   String _routeInfoText = ''; // Distância e tempo do trajeto real
 
   /// Busca e desenha o trajeto real do endereço do usuário até a vinícola selecionada
@@ -43,14 +44,43 @@ class _MapScreenState extends State<MapScreen> {
       _routeWinery = winery;
       _selectedWinery = winery;
       _routePoints = <LatLng>[]; // Limpa para carregar trajeto das ruas
-      _routeInfoText = 'Calculando caminho pelas ruas a partir de ${userAddress.isNotEmpty ? userAddress : "Seu Endereço"}...';
+      _routeInfoText = 'Localizando endereço: ${userAddress.isNotEmpty ? userAddress : "Seu Endereço"}...';
     });
+
+    LatLng originPoint = _defaultOrigin;
+
+    // 1. Geocodifica o endereço do usuário via OpenStreetMap Nominatim para obter latitude e longitude reais
+    if (userAddress.isNotEmpty) {
+      try {
+        final geoUrl = Uri.parse(
+          'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(userAddress)}&format=json&limit=1',
+        );
+        final client = HttpClient();
+        client.userAgent = 'WineryFinderApp/1.0';
+        final request = await client.getUrl(geoUrl);
+        final response = await request.close();
+
+        if (response.statusCode == 200) {
+          final responseBody = await response.transform(utf8.decoder).join();
+          final List<dynamic> geoData = jsonDecode(responseBody) as List<dynamic>;
+          if (geoData.isNotEmpty) {
+            final Map<String, dynamic> firstGeo = Map<String, dynamic>.from(geoData[0] as Map);
+            final lat = double.parse(firstGeo['lat'].toString());
+            final lon = double.parse(firstGeo['lon'].toString());
+            originPoint = LatLng(lat, lon);
+          }
+        }
+      } catch (e) {
+        debugPrint('Erro ao geolocalizar endereço: $e');
+      }
+    }
 
     final destination = LatLng(winery.latitude, winery.longitude);
 
+    // 2. Busca a rota real pelas ruas/rodovias entre o endereço do usuário e a vinícola
     final osrmEndpoints = [
-      'https://router.project-osrm.org/route/v1/driving/${_defaultOrigin.longitude},${_defaultOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
-      'https://routing.openstreetmap.de/routed-car/route/v1/driving/${_defaultOrigin.longitude},${_defaultOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      'https://router.project-osrm.org/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
     ];
 
     for (final endpoint in osrmEndpoints) {
@@ -84,7 +114,8 @@ class _MapScreenState extends State<MapScreen> {
             if (mounted) {
               setState(() {
                 _routePoints = points;
-                _routeInfoText = 'Trajeto Real: $distKm km • ~$durationMinutes min';
+                _routeOriginPoint = originPoint;
+                _routeInfoText = 'Trajeto Real pelas Ruas: $distKm km • ~$durationMinutes min';
               });
 
               if (points.isNotEmpty) {
@@ -92,7 +123,7 @@ class _MapScreenState extends State<MapScreen> {
                 _mapController.fitCamera(
                   CameraFit.bounds(
                     bounds: bounds,
-                    padding: const EdgeInsets.all(50.0),
+                    padding: const EdgeInsets.all(55.0),
                   ),
                 );
               }
@@ -107,12 +138,21 @@ class _MapScreenState extends State<MapScreen> {
 
     if (mounted) {
       setState(() {
+        _routeOriginPoint = originPoint;
+        _routePoints = <LatLng>[originPoint, destination];
         _routeInfoText = 'Trajeto: ${WineryFilter.formatDistance(winery.distanceKm)}';
       });
+      final bounds = LatLngBounds.fromPoints([originPoint, destination]);
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(55.0),
+        ),
+      );
     }
   }
 
-  /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
+  /// Abre o Google Maps traçando a rota direto do endereço do usuário cadastrado até a vinícola
   Future<void> _openGoogleMapsRoute(Winery winery) async {
     await _fetchRealRoadRoute(winery);
 
@@ -665,33 +705,33 @@ class _MapScreenState extends State<MapScreen> {
                               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                               userAgentPackageName: 'com.winery.winery_finder',
                             ),
-                            // Trajeto Real pelas Ruas/Rodovias DESTACADO (PolylineLayer Duplo com Destaque Dourado e Cor Vinho)
+                            // Trajeto Real pelas Ruas/Rodovias DESTACADO (PolylineLayer Duplo com Destaque Dourado/Amber e Cor Vinho)
                             if (_routeWinery != null && _routePoints.isNotEmpty)
                               PolylineLayer(
                                 polylines: [
-                                  // Camada 1: Borda Dourada / Amarela de Destaque Vibrante
+                                  // Camada 1: Borda de Destaque Dourado/Amarelo Neon
                                   Polyline(
                                     points: _routePoints,
-                                    strokeWidth: 9.5,
+                                    strokeWidth: 11.0,
                                     color: Colors.amberAccent,
                                   ),
                                   // Camada 2: Linha Principal Cor Vinho
                                   Polyline(
                                     points: _routePoints,
-                                    strokeWidth: 5.5,
+                                    strokeWidth: 6.0,
                                     color: const Color(0xFF722F37),
                                   ),
                                 ],
                               ),
                             MarkerLayer(
                               markers: [
-                                // Marcador do Usuário/Partida (GPS Azul)
+                                // Marcador do Usuário/Endereço de Partida (GPS Azul)
                                 if (_routeWinery != null)
-                                  const Marker(
-                                    point: _defaultOrigin,
+                                  Marker(
+                                    point: _routeOriginPoint,
                                     width: 44,
                                     height: 44,
-                                    child: Icon(Icons.my_location, size: 38, color: Colors.blueAccent),
+                                    child: const Icon(Icons.my_location, size: 38, color: Colors.blueAccent),
                                   ),
                                 ...filteredWineries.map((winery) {
                                   final isSelected = _selectedWinery?.id == winery.id;
