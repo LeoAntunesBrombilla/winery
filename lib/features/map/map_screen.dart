@@ -16,7 +16,7 @@ import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real em ruas/rodovias, gastos estimados de viagem e Google Maps.
+/// Aba Mapa: exibe o mapa interativo, busca, filtros, trajeto real do endereço do usuário até a vinícola.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -25,38 +25,32 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  static const LatLng _userOrigin = LatLng(-29.1683, -51.5204); // Ponto de partida do usuário (Vale dos Vinhedos)
+  static const LatLng _defaultOrigin = LatLng(-29.1683, -51.5204); // Ponto padrão (Bento Gonçalves, RS)
 
   String _searchQuery = '';
   final Set<WineType> _selectedTypes = <WineType>{};
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas/rodovias
-  String _routeInfoText = ''; // Distância e tempo de viagem real pelas ruas
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos do trajeto real das ruas
+  String _routeInfoText = ''; // Distância e tempo do trajeto real
 
-  // Estimativa de Gastos da Viagem
-  double _routeFuelCost = 0.0;
-  double _routeTollCost = 0.0;
-  double _routeTotalCost = 0.0;
-
-  /// Busca e desenha o trajeto real pelas ruas/rodovias e calcula os gastos estimados
+  /// Busca e desenha o trajeto real do endereço do usuário até a vinícola selecionada
   Future<void> _fetchRealRoadRoute(Winery winery) async {
+    final userAddress = AuthRepository.instance.currentUser?.address ?? '';
+
     setState(() {
       _routeWinery = winery;
       _selectedWinery = winery;
-      _routePoints = <LatLng>[]; // Limpa pontos para carregar trajeto das ruas
-      _routeInfoText = 'Calculando caminho pelas ruas e rodovias...';
-      _routeFuelCost = 0.0;
-      _routeTollCost = 0.0;
-      _routeTotalCost = 0.0;
+      _routePoints = <LatLng>[]; // Limpa para carregar trajeto das ruas
+      _routeInfoText = 'Calculando caminho pelas ruas a partir de ${userAddress.isNotEmpty ? userAddress : "Seu Endereço"}...';
     });
 
     final destination = LatLng(winery.latitude, winery.longitude);
 
     final osrmEndpoints = [
-      'https://router.project-osrm.org/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
-      'https://routing.openstreetmap.de/routed-car/route/v1/driving/${_userOrigin.longitude},${_userOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      'https://router.project-osrm.org/route/v1/driving/${_defaultOrigin.longitude},${_defaultOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving/${_defaultOrigin.longitude},${_defaultOrigin.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson',
     ];
 
     for (final endpoint in osrmEndpoints) {
@@ -85,22 +79,12 @@ class _MapScreenState extends State<MapScreen> {
             final num distanceMeters = routeData['distance'] as num;
             final num durationSeconds = routeData['duration'] as num;
             final durationMinutes = (durationSeconds / 60).round();
-            final double distKmValue = distanceMeters / 1000.0;
-            final distKm = distKmValue.toStringAsFixed(1);
-
-            // Cálculo dos gastos de viagem (Combustível & Pedágios nas rodovias)
-            final double fuelCost = (distKmValue / 10.0) * 6.10; // Média 10km/L a R$ 6,10/L
-            final int estimatedTolls = (distKmValue / 70.0).floor();
-            final double tollCost = estimatedTolls * 8.50; // Média R$ 8,50 por praça
-            final double totalCost = fuelCost + tollCost;
+            final distKm = (distanceMeters / 1000).toStringAsFixed(1);
 
             if (mounted) {
               setState(() {
                 _routePoints = points;
-                _routeFuelCost = fuelCost;
-                _routeTollCost = tollCost;
-                _routeTotalCost = totalCost;
-                _routeInfoText = 'Caminho pelas Ruas: $distKm km • ~$durationMinutes min';
+                _routeInfoText = 'Trajeto Real: $distKm km • ~$durationMinutes min';
               });
 
               if (points.isNotEmpty) {
@@ -122,21 +106,13 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     if (mounted) {
-      final double distKmValue = winery.distanceKm;
-      final double fuelCost = (distKmValue / 10.0) * 6.10;
-      final int estimatedTolls = (distKmValue / 70.0).floor();
-      final double tollCost = estimatedTolls * 8.50;
-
       setState(() {
-        _routeFuelCost = fuelCost;
-        _routeTollCost = tollCost;
-        _routeTotalCost = fuelCost + tollCost;
-        _routeInfoText = 'Caminho pelas ruas indisponível offline. Toque em Seguir no Google Maps.';
+        _routeInfoText = 'Trajeto: ${WineryFilter.formatDistance(winery.distanceKm)}';
       });
     }
   }
 
-  /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
+  /// Abre o Google Maps traçando a rota direto do endereço do usuário cadastrado até a vinícola
   Future<void> _openGoogleMapsRoute(Winery winery) async {
     await _fetchRealRoadRoute(winery);
 
@@ -144,10 +120,15 @@ class _MapScreenState extends State<MapScreen> {
       Navigator.of(context).pop();
     }
 
-    final String destinationName = Uri.encodeComponent('${winery.name}, ${winery.city}');
-    final Uri googleMapsUri = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=${winery.latitude},${winery.longitude}&destination_place_id=$destinationName&travelmode=driving',
-    );
+    final userAddress = AuthRepository.instance.currentUser?.address ?? '';
+    final String originParam = userAddress.isNotEmpty ? Uri.encodeComponent(userAddress) : '';
+    final String destinationParam = Uri.encodeComponent('${winery.name}, ${winery.address}');
+
+    final String mapsUrlString = originParam.isNotEmpty
+        ? 'https://www.google.com/maps/dir/?api=1&origin=$originParam&destination=${winery.latitude},${winery.longitude}&destination_place_id=$destinationParam&travelmode=driving'
+        : 'https://www.google.com/maps/dir/?api=1&destination=${winery.latitude},${winery.longitude}&destination_place_id=$destinationParam&travelmode=driving';
+
+    final Uri googleMapsUri = Uri.parse(mapsUrlString);
 
     try {
       if (await canLaunchUrl(googleMapsUri)) {
@@ -159,7 +140,7 @@ class _MapScreenState extends State<MapScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Navegação no Google Maps para "${winery.name}" (${WineryFilter.formatDistance(winery.distanceKm)})'),
+            content: Text('Abrindo rota no Google Maps de ${userAddress.isNotEmpty ? userAddress : "seu endereço"} para ${winery.name}...'),
           ),
         );
       }
@@ -269,7 +250,7 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Botões de Trajeto pelas Ruas e Navegação
+                      // Botões de Trajeto pelas Ruas e Navegação do Seu Endereço
                       Row(
                         children: [
                           Expanded(
@@ -565,6 +546,8 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final userAddress = AuthRepository.instance.currentUser?.address ?? '';
+
     return AnimatedBuilder(
       animation: AuthRepository.instance,
       builder: (context, _) {
@@ -666,7 +649,7 @@ class _MapScreenState extends State<MapScreen> {
                       ],
                     ),
                   ),
-                  // Map View com Trajeto Real em Ruas/Rodovias e Estimativa de Gastos
+                  // Map View com Trajeto Real em Ruas/Rodovias
                   Expanded(
                     flex: 3,
                     child: Stack(
@@ -674,7 +657,7 @@ class _MapScreenState extends State<MapScreen> {
                         FlutterMap(
                           mapController: _mapController,
                           options: const MapOptions(
-                            initialCenter: _userOrigin, // Vale dos Vinhedos
+                            initialCenter: _defaultOrigin, // Vale dos Vinhedos
                             initialZoom: 11.5,
                           ),
                           children: [
@@ -698,7 +681,7 @@ class _MapScreenState extends State<MapScreen> {
                                 // Marcador do Usuário/Partida
                                 if (_routeWinery != null)
                                   const Marker(
-                                    point: _userOrigin,
+                                    point: _defaultOrigin,
                                     width: 40,
                                     height: 40,
                                     child: Icon(Icons.my_location, size: 34, color: Colors.blueAccent),
@@ -726,7 +709,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ],
                         ),
-                        // Card/Banner de Trajeto Real Ativo com Gastos da Viagem (Combustível & Pedágios)
+                        // Card/Banner de Trajeto Real do Endereço do Usuário
                         if (_routeWinery != null)
                           Positioned(
                             top: 10,
@@ -750,13 +733,16 @@ class _MapScreenState extends State<MapScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                _routeWinery!.name,
+                                                'Para: ${_routeWinery!.name}',
                                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                               ),
                                               Text(
-                                                _routeInfoText.isNotEmpty
-                                                    ? _routeInfoText
-                                                    : 'Distância: ${WineryFilter.formatDistance(_routeWinery!.distanceKm)}',
+                                                'De: ${userAddress.isNotEmpty ? userAddress : "Seu Endereço"}',
+                                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _routeInfoText,
                                                 style: TextStyle(color: theme.colorScheme.primary, fontSize: 12, fontWeight: FontWeight.bold),
                                               ),
                                             ],
@@ -771,41 +757,6 @@ class _MapScreenState extends State<MapScreen> {
                                           }),
                                         ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    // Painel de Gastos da Viagem
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.4)),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Column(
-                                            children: [
-                                              const Text('⛽ Combustível', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                              Text('R\$ ${_routeFuelCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                            ],
-                                          ),
-                                          Container(width: 1, height: 24, color: Colors.grey.withValues(alpha: 0.4)),
-                                          Column(
-                                            children: [
-                                              const Text('🛣️ Pedágios', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                              Text('R\$ ${_routeTollCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                            ],
-                                          ),
-                                          Container(width: 1, height: 24, color: Colors.grey.withValues(alpha: 0.4)),
-                                          Column(
-                                            children: [
-                                              const Text('💰 Gasto Total', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                                              Text('R\$ ${_routeTotalCost.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.greenAccent)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     SizedBox(
@@ -896,7 +847,7 @@ class _MapScreenState extends State<MapScreen> {
                                               // Botão "Como Chegar" (desenha o trajeto real das ruas no mapa)
                                               IconButton(
                                                 icon: const Icon(Icons.alt_route, color: Color(0xFF722F37)),
-                                                tooltip: 'Trajeto Real pelas Ruas',
+                                                tooltip: 'Trajeto Real do Seu Endereço',
                                                 onPressed: () => _fetchRealRoadRoute(winery),
                                               ),
                                               AnimatedBuilder(
