@@ -280,7 +280,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Limpar busca'));
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Limpar busca'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Nenhuma vinícola'), findsNothing);
@@ -289,6 +289,117 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller!.text,
         isEmpty,
       );
+    });
+  });
+
+  group('filtro por tipo de vinho (US04)', () {
+    final List<Winery> serra = <Winery>[
+      testWinery(
+        id: 'tinto',
+        name: 'Adega Tinta',
+        city: 'Bento Gonçalves',
+        wineTypes: <WineType>{WineType.tinto},
+        coordinates: const Coordinates(-29.17, -51.52),
+      ),
+      testWinery(
+        id: 'espumante',
+        name: 'Casa Espumante',
+        city: 'Garibaldi',
+        wineTypes: <WineType>{WineType.espumante, WineType.branco},
+        coordinates: const Coordinates(-29.25, -51.53),
+      ),
+      testWinery(
+        id: 'rose',
+        name: 'Vinícola Rosé',
+        city: 'Bento Gonçalves',
+        wineTypes: <WineType>{WineType.rose},
+        coordinates: const Coordinates(-29.18, -51.51),
+      ),
+    ];
+
+    Future<void> tapChip(WidgetTester tester, String label) async {
+      await tester.tap(find.widgetWithText(FilterChip, label));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('mostra os quatro tipos e a contagem', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      for (final String label in <String>[
+        'Tinto',
+        'Branco',
+        'Espumante',
+        'Rosé',
+      ]) {
+        expect(find.widgetWithText(FilterChip, label), findsOneWidget);
+      }
+      expect(find.text('3 vinícolas'), findsOneWidget);
+      expect(find.text('Limpar filtros'), findsNothing);
+    });
+
+    testWidgets('seleção múltipla mostra qualquer um dos tipos marcados', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      await tapChip(tester, 'Tinto');
+      expect(find.text('1 vinícola'), findsOneWidget);
+      expect(find.text('pin Adega Tinta'), findsOneWidget);
+
+      await tapChip(tester, 'Branco');
+      expect(find.text('2 vinícolas'), findsOneWidget);
+      expect(find.text('pin Casa Espumante'), findsOneWidget);
+      expect(find.text('pin Vinícola Rosé'), findsNothing);
+    });
+
+    testWidgets('combina com a busca', (WidgetTester tester) async {
+      await pumpMap(tester, location: user, wineries: serra);
+
+      await tester.enterText(find.byType(TextField), 'bento');
+      await tester.pumpAndSettle();
+      await tapChip(tester, 'Rosé');
+
+      expect(find.text('1 vinícola'), findsOneWidget);
+      await showList(tester);
+      expect(visibleOrder(tester), <String>['Vinícola Rosé']);
+    });
+
+    testWidgets('Limpar filtros restaura a lista completa', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+      await tester.enterText(find.byType(TextField), 'bento');
+      await tapChip(tester, 'Tinto');
+      expect(find.text('1 vinícola'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Limpar filtros'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('3 vinícolas'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilterChip>(find.widgetWithText(FilterChip, 'Tinto'))
+            .selected,
+        isFalse,
+      );
+    });
+
+    testWidgets('sem resultado oferece Limpar filtros', (
+      WidgetTester tester,
+    ) async {
+      await pumpMap(tester, location: user, wineries: serra);
+      await tester.enterText(find.byType(TextField), 'garibaldi');
+      await tapChip(tester, 'Tinto');
+
+      expect(
+        find.text('Nenhuma vinícola de Tinto encontrada para "garibaldi".'),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Limpar filtros'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 vinícolas'), findsOneWidget);
     });
   });
 }
