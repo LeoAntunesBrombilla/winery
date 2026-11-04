@@ -1,10 +1,17 @@
 import 'package:flutter/widgets.dart';
 import 'package:winery_finder/data/favorites_store.dart';
+import 'package:winery_finder/data/winery_catalog.dart';
 
 /// Estado compartilhado entre as abas e as fichas abertas por cima delas.
 class AppScope extends InheritedWidget {
-  const AppScope({required this.favorites, required super.child, super.key});
+  const AppScope({
+    required this.catalog,
+    required this.favorites,
+    required super.child,
+    super.key,
+  });
 
+  final WineryCatalog catalog;
   final FavoritesStore favorites;
 
   /// `null` fora do app (ex.: testes de um widget isolado).
@@ -19,5 +26,5 @@ class AppScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AppScope oldWidget) =>
-      favorites != oldWidget.favorites;
+      catalog != oldWidget.catalog || favorites != oldWidget.favorites;
 }

@@ -9,6 +9,15 @@ import 'package:winery_finder/widgets/favorite_button.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
 import 'package:winery_finder/widgets/route_button.dart';
 
+/// Abre a ficha de [winery] por cima da tela atual.
+Future<void> openWineryDetail(BuildContext context, Winery winery) {
+  return Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (BuildContext context) => WineryDetailScreen(winery: winery),
+    ),
+  );
+}
+
 /// Ficha da vinícola, aberta a partir do pin e da lista. As informações de
 /// decisão (endereço, reserva, preço) ficam no topo, visíveis sem rolar.
 class WineryDetailScreen extends StatelessWidget {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:winery_finder/data/location_provider.dart';
-import 'package:winery_finder/data/winery_repository.dart';
+import 'package:winery_finder/app_scope.dart';
 import 'package:winery_finder/features/favorites/favorites_screen.dart';
 import 'package:winery_finder/features/map/map_screen.dart';
 import 'package:winery_finder/features/recents/recents_screen.dart';
@@ -8,14 +7,7 @@ import 'package:winery_finder/features/recents/recents_screen.dart';
 /// Casca da tela inicial com a navegação inferior entre as três abas
 /// do protótipo: Mapa, Favoritos e Recentes.
 class HomeShell extends StatefulWidget {
-  const HomeShell({
-    this.repository = const EmptyWineryRepository(),
-    this.location = const NoLocationProvider(),
-    super.key,
-  });
-
-  final WineryRepository repository;
-  final LocationProvider location;
+  const HomeShell({super.key});
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -24,16 +16,18 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  late final List<Widget> _screens = <Widget>[
-    MapScreen(repository: widget.repository, location: widget.location),
-    const FavoritesScreen(),
-    const RecentsScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final AppScope scope = AppScope.of(context);
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: IndexedStack(
+        index: _index,
+        children: <Widget>[
+          MapScreen(catalog: scope.catalog),
+          FavoritesScreen(catalog: scope.catalog, favorites: scope.favorites),
+          const RecentsScreen(),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (int value) => setState(() => _index = value),
