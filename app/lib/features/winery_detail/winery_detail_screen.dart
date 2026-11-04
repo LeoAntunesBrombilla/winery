@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:winery_finder/data/url_opener.dart';
 import 'package:winery_finder/domain/tasting_price.dart';
 import 'package:winery_finder/domain/winery.dart';
+import 'package:winery_finder/features/winery_detail/contact_section.dart';
 import 'package:winery_finder/features/winery_detail/opening_hours_section.dart';
 import 'package:winery_finder/features/winery_detail/rating_section.dart';
 import 'package:winery_finder/widgets/reservation_badge.dart';
@@ -11,6 +13,7 @@ class WineryDetailScreen extends StatelessWidget {
   const WineryDetailScreen({
     required this.winery,
     this.now = DateTime.now,
+    this.openUrl = openExternally,
     super.key,
   });
 
@@ -18,6 +21,9 @@ class WineryDetailScreen extends StatelessWidget {
 
   /// Relógio usado para destacar o dia de hoje; injetável nos testes.
   final DateTime Function() now;
+
+  /// Abre discador, navegador e app de mapas; injetável nos testes.
+  final UrlOpener openUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +65,12 @@ class WineryDetailScreen extends StatelessWidget {
                 style: theme.textTheme.bodyLarge,
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          ContactSection(
+            phone: winery.phone,
+            website: winery.website,
+            openUrl: openUrl,
           ),
           const Divider(height: 32),
           OpeningHoursSection(hours: winery.hours, today: now().weekday),

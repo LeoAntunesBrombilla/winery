@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:winery_finder/data/url_opener.dart';
 import 'package:winery_finder/features/spike/route_link.dart';
-
-/// Abre uma URL fora do app; devolve `false` se nenhum app puder abri-la.
-typedef UrlOpener = Future<bool> Function(Uri uri);
 
 /// Desenha o mapa centrado no pin. Injetável para os testes de widget, que
 /// não têm a view nativa do Google Maps.
@@ -14,7 +11,7 @@ typedef SpikeMapBuilder = Widget Function(LatLng pin, String label);
 /// navegação. Valida a chave do Maps e o deep link nos dois sistemas.
 class MapSpikeScreen extends StatelessWidget {
   const MapSpikeScreen({
-    this.openUrl = _openExternally,
+    this.openUrl = openExternally,
     this.mapBuilder = _googleMap,
     super.key,
   });
@@ -25,9 +22,6 @@ class MapSpikeScreen extends StatelessWidget {
 
   final UrlOpener openUrl;
   final SpikeMapBuilder mapBuilder;
-
-  static Future<bool> _openExternally(Uri uri) =>
-      launchUrl(uri, mode: LaunchMode.externalApplication);
 
   static Widget _googleMap(LatLng pin, String label) {
     return GoogleMap(
