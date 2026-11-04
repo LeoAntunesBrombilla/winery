@@ -58,6 +58,7 @@ class _MapScreenState extends State<MapScreen> {
   _MapView _view = _MapView.map;
   late final Future<_Catalog> _catalog = _load();
   final TextEditingController _search = TextEditingController();
+  final Set<WineType> _types = <WineType>{};
 
   String get _query => _search.text;
 
@@ -83,6 +84,18 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {});
   }
 
+  bool get _hasFilters => _types.isNotEmpty || _query.isNotEmpty;
+
+  /// Limpar filtros (US04): tira tipos e busca, restaurando a lista.
+  void _clearFilters() {
+    _search.clear();
+    setState(_types.clear);
+  }
+
+  void _toggleType(WineType type, bool selected) {
+    setState(() => selected ? _types.add(type) : _types.remove(type));
+  }
+
   /// Conjunto exibido no mapa e na lista. A busca procura no catálogo
   /// inteiro (o usuário pode buscar uma cidade fora dos 50 km); sem busca,
   /// vale o recorte próximo.
@@ -90,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
     final bool searching = WineryFilter.isSearching(_query);
     final List<Winery> base = searching ? catalog.all : catalog.nearby.wineries;
     return NearbySelection(
-      WineryFilter.apply(base, query: _query),
+      WineryFilter.apply(base, query: _query, types: _types),
       catalog.nearby.center,
       catalog.nearby.mode,
     );
@@ -176,10 +189,20 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
               ),
+              _TypeFilters(
+                selected: _types,
+                onToggle: _toggleType,
+                resultCount: selection.wineries.length,
+                onClear: _hasFilters ? _clearFilters : null,
+              ),
               if (notice != null) _Notice(notice),
               Expanded(
                 child: selection.wineries.isEmpty
-                    ? _NoResults(query: _query.trim(), onClear: _clearSearch)
+                    ? _NoResults(
+                        query: _query.trim(),
+                        types: _types,
+                        onClear: _clearFilters,
+                      )
                     : switch (_view) {
                         _MapView.map => widget.mapBuilder(
                           context,
@@ -201,10 +224,26 @@ class _MapScreenState extends State<MapScreen> {
 }
 
 class _NoResults extends StatelessWidget {
-  const _NoResults({required this.query, required this.onClear});
+  const _NoResults({
+    required this.query,
+    required this.types,
+    required this.onClear,
+  });
 
   final String query;
+  final Set<WineType> types;
   final VoidCallback onClear;
+
+  String get _message {
+    final String typeNames = types.map((WineType t) => t.label).join(', ');
+    if (WineryFilter.isSearching(query) && types.isNotEmpty) {
+      return 'Nenhuma vinícola de $typeNames encontrada para "$query".';
+    }
+    if (types.isNotEmpty) {
+      return 'Nenhuma vinícola de $typeNames por aqui.';
+    }
+    return 'Nenhuma vinícola encontrada para "$query".';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,17 +257,75 @@ class _NoResults extends StatelessWidget {
             Icon(Icons.search_off, size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: 12),
             Text(
-              'Nenhuma vinícola encontrada para "$query".',
+              _message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: onClear,
-              child: const Text('Limpar busca'),
+              child: Text(types.isEmpty ? 'Limpar busca' : 'Limpar filtros'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Chips de tipo de vinho (US04): seleção múltipla, contagem de resultados
+/// e Limpar filtros.
+class _TypeFilters extends StatelessWidget {
+  const _TypeFilters({
+    required this.selected,
+    required this.onToggle,
+    required this.resultCount,
+    required this.onClear,
+  });
+
+  final Set<WineType> selected;
+  final void Function(WineType type, bool selected) onToggle;
+  final int resultCount;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: <Widget>[
+                for (final WineType type in WineType.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(type.label),
+                      selected: selected.contains(type),
+                      onSelected: (bool value) => onToggle(type, value),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  resultCount == 1 ? '1 vinícola' : '$resultCount vinícolas',
+                ),
+              ),
+              if (onClear != null)
+                TextButton(
+                  onPressed: onClear,
+                  child: const Text('Limpar filtros'),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
