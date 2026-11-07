@@ -1,175 +1,191 @@
-# 🍇 Winery Finder — Documentação Detalhada do Projeto
+# 🍇 Winery Finder — Documentação Completa do Projeto
 
-O **Winery Finder** é uma plataforma desenvolvida em Flutter projetada para conectar apreciadores de vinho a vinícolas do Brasil e do mundo, oferecendo navegação por mapa interativo, catálogo completo de vinhos, sistema de vendas com pagamento direto, diretório de sommeliers profissionais, blog coletivo de harmonização e controle de favoritos.
+![Winery Banner](https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb)
+
+O **Winery Finder** é uma plataforma desenvolvida em Flutter projetada para conectar apreciadores de vinho a vinícolas do Brasil e do mundo. O aplicativo conta com mapa interativo livre, navegação por trajeto real pelas ruas, direcionamento GPS no Google Maps, catálogo de vendas de vinhos, diretório de sommeliers profissionais, blog coletivo de harmonização e controle de permissões por perfil.
 
 ---
 
 ## 📋 Sumário
 1. [Visão Geral e Perfis de Usuário](#-visão-geral-e-perfis-de-usuário)
-2. [Arquitetura e Módulos do Sistema](#-arquitetura-e-módulos-do-sistema)
-3. [Regras de Negócio e Permissões por Perfil](#-regras-de-negócio-e-permissões-por-perfil)
+2. [Fluxograma de Funcionamento do Sistema](#-fluxograma-de-funcionamento-do-sistema)
+3. [Arquitetura e Módulos de Software](#-arquitetura-e-módulos-de-software)
 4. [📱 Detalhamento das Telas e Funcionalidades](#-detalhamento-das-telas-e-funcionalidades)
 5. [📖 Tutorial Passo a Passo do Usuário](#-tutorial-passo-a-passo-do-usuário)
-6. [Modelagem de Dados (Domain)](#-modelagem-de-dados-domain)
-7. [Qualidade e Testes Automatizados](#-qualidade-e-testes-automatizados)
-8. [Como Executar e Subir para o GitHub](#-como-executar-e-subir-para-o-github)
+6. [📊 Modelagem de Dados (Domain)](#-modelagem-de-dados-domain)
+7. [🧪 Qualidade e Testes Automatizados](#-qualidade-e-testes-automatizados)
+8. [🚀 Como Executar e Subir para o GitHub](#-como-executar-e-subir-para-o-github)
 
 ---
 
 ## 🎯 Visão Geral e Perfis de Usuário
 
-O projeto contempla **3 Perfis Principais de Usuário** e o **Administrador Master**:
+O sistema contempla **3 Perfis Principais de Usuário** e o **Administrador Master**:
 
-1. **🏢 Perfil Vinícola / Produtor**:
-   - Cadastra a vinícola (logo, fotos, endereço, proprietário, sommelier, uvas cultivadas).
-   - Cadastra, ativa/inativa, altera preços e gerencia produtos (vinhos) à venda com link de pagamento direto (*MercadoPago, WhatsApp, Loja Online*).
-   - Acessa o **Diretório de Sommeliers** e participa de comentários no **Blog Coletivo**.
+```mermaid
+graph TD
+    User([Novo Usuário]) --> RoleSelect{Escolha do Perfil}
+    RoleSelect --> Admirer[🍷 Admirador de Vinhos]
+    RoleSelect --> Sommelier[🎓 Sommelier Profissional]
+    RoleSelect --> Winery[🏢 Vinícola / Produtor]
+    
+    Admirer --> ConsultMap[Explorar Mapa & Rota GPS]
+    Admirer --> ReadBlog[Ler & Comentar no Blog]
+    Admirer --> BuyWine[Comprar Vinhos Direct]
 
-2. **🎓 Perfil Sommelier Profissional**:
-   - Mantém um **Histórico Profissional**, **Formação Profissional / Certificações** (ex: *WSET, ABS, FISAR*) e **Informações de Contato**.
-   - Publica matérias, avaliações de safras e notas de degustação no **Blog Coletivo**.
-   - Aparece em destaque no **Diretório de Sommeliers Profissionais**.
+    Sommelier --> PublishBlog[Publicar Matérias no Blog]
+    Sommelier --> SommelierProfile[Aparecer no Diretório Profissional]
 
-3. **🍷 Perfil Admirador de Vinhos (Consumidor)**:
-   - Explora vinícolas pelo **Mapa Interativo (OpenStreetMap)** e filtra por tipos de vinho.
-   - Salva vinícolas favoritas com um toque.
-   - Consulta matérias publicadas pelos Sommeliers e comenta no **Blog Coletivo**.
-   - Compra vinhos com direcionamento para link de pagamento direct.
+    Winery --> RegisterWinery[Cadastrar & Editar Vinícola]
+    Winery --> WineProducts[Postar Vinhos & Preços]
 
-4. **🛡️ Perfil Administrador (`admin@winery.com`)**:
-   - Acesso exclusivo ao **Painel do Administrador** para editar cadastros, bloquear/desbloquear usuários ou excluir contas e gerenciar todas as contribuições da plataforma.
-
----
-
-## 🏗️ Arquitetura e Módulos do Sistema
-
-O projeto segue os princípios de separação de responsabilidades e arquitetura modular:
-
+    Admin([🛡️ Admin Master admin@winery.com]) --> AdminPanel[Painel Admin: Editar, Bloquear e Excluir Usuários/Postagens]
 ```
-lib/
-├── main.dart                      # Ponto de entrada da aplicação
-├── app.dart                       # Configuração do MaterialApp, tema em cor vinho e controle de sessão
-├── domain/                        # Regras de negócio e modelos de dados
-│   ├── user_account.dart          # Modelo de usuário (Perfis: Vinícola, Sommelier, Admirador, Admin)
-│   ├── winery.dart                # Modelo de vinícola (Nome, Responsável, Sommelier, Uvas, Fotos, Coordenadas)
-│   ├── wine_product.dart          # Modelo de vinho à venda (Preço, Uva, Safra, Link de Pagamento, Status Ativo)
-│   ├── blog_post.dart             # Modelo de publicações e comentários do Blog Coletivo
-│   └── winery_filter.dart         # Lógica pura de busca, ordenação por distância e filtros
-├── data/                          # Repositórios de dados e estado reativo
-│   ├── auth_repository.dart       # Gestão de usuários, perfis, login, cadastro e controle de sessão
-│   ├── winery_repository.dart     # Catálogo completo de vinícolas do Brasil e do mundo
-│   ├── wine_repository.dart       # Gestão de produtos, adição, alteração de preço e inativação
-│   ├── blog_repository.dart       # Repositório de postagens do Blog Coletivo e comentários
-│   └── favorites_repository.dart  # Controle da lista de favoritos do usuário
-├── features/                      # Telas e fluxos de interface do usuário (UI)
-│   ├── auth/                      # Telas de Login (LoginScreen) e Cadastro (RegisterScreen)
-│   ├── admin/                     # Painel do Administrador (AdminDashboardScreen) e Diálogo de Edição
-│   ├── blog/                      # Blog Coletivo (BlogScreen) e Diretório de Sommeliers (SommeliersScreen)
-│   ├── map/                       # Mapa (MapScreen), Cadastro de Vinícola, Painel de Produtos e Edição
-│   ├── favorites/                 # Tela de Vinícolas Favoritas (FavoritesScreen)
-│   └── home/                      # Casca de navegação inferior (HomeShell)
-└── widgets/                       # Componentes visuais customizados
-    ├── winery_logo.dart           # Logotipo vetorial realista em formato de cacho de uvas roxas
-    └── vineyard_background.dart   # Fundo decorativo de videira com transparência vinho
-```
-
----
-
-## 🔒 Regras de Negócio e Permissões por Perfil
-
-1. **Acesso Autenticado por Perfil**:
-   - Todo usuário escolhe seu perfil (**Admirador**, **Sommelier** ou **Vinícola**) durante o cadastro.
-2. **Gestão de Conteúdo e Vendas**:
-   - **Apenas o usuário que cadastrou a vinícola** (ou o admin) pode alterar informações ou gerenciar vinhos à venda daquela vinícola.
-   - **Sommeliers Profissionais** têm permissão exclusiva para publicar matérias no **Blog Coletivo**.
-   - **Todos os cadastrados** (Admiradores, Vinícolas e Sommeliers) podem ler, comentar e interagir nas publicações do Blog Coletivo.
-3. **Painel do Administrador**:
-   - Exclusivo para `admin@winery.com` alterar cadastros, bloquear/desbloquear ou excluir usuários.
 
 ---
 
 ## 📱 Detalhamento das Telas e Funcionalidades
 
 ### 1. Tela de Login (`LoginScreen`)
-- **Objetivo**: Acesso autenticado ao sistema.
-- **Campos**: E-mail e Senha (com alternância de visibilidade).
-- **Design**: Imagem decorativa de videira (`VineyardBackground`) e logotipo realista de cacho de uvas roxas (`WineryLogo`).
+- **Visual**: Fundo com foto de videira (`VineyardBackground`) e logotipo realista de cacho de uvas roxas (`WineryLogo`).
+- **Recursos**: Login seguro com e-mail e senha, botão para mostrar/ocultar senha e atalho para o cadastro.
 
 ### 2. Tela de Cadastro de Usuário (`RegisterScreen`)
-- **Objetivo**: Registrar um novo usuário selecionando o **Perfil do Usuário** (*Admirador*, *Sommelier*, *Vinícola*).
-- **Campos Específicos para Sommelier**:
-  - Formação Profissional / Certificações (ex: *WSET, ABS, FISAR*).
-  - Histórico Profissional e Experiência.
-  - Informações de Contato Profissional e Redes Sociais.
+- **Escolha do Perfil**: Select para definir o papel do usuário:
+  - **Admirador de Vinhos**: Perfil de consumidor.
+  - **Sommelier Profissional**: Abre os campos exclusivos de **Formação Profissional / Certificações** (ex: *WSET Level 3, ABS, FISAR*), **Histórico Profissional** e **Contatos**.
+  - **Vinícola / Produtor**: Perfil de proprietário para cadastrar estabelecimentos e vinhos.
+- **Foto Pessoal**: Upload de foto do computador ou galeria.
 
-### 3. Tela Principal & Mapa Interativo (`MapScreen`)
-- **Objetivo**: Apresentar o mapa de vinícolas, busca, filtros e rota **Como Chegar pelo Google Maps**.
-- **Recursos**:
-  - **Renderização de Mapa**: Azulejos do OpenStreetMap com marcadores de vinícolas.
-  - **Botão "Como Chegar"**: Abre a navegação GPS curva a curva diretamente no aplicativo do **Google Maps** e traça a linha de rota na cor vinho no mapa interno.
-  - **Chips de Tipos de Vinho**: Filtre por *Tinto, Branco, Espumante, Rosé*.
+### 3. Tela Principal & Mapa Interativo Livre (`MapScreen`)
+- **Layout Dividido Inteligente**: O mapa fica no topo em `Expanded(flex: 3)`, totalmente livre e **nunca é coberto** por popups. Os detalhes e a lista aparecem na parte inferior (`Expanded(flex: 2)`).
+- **Trajeto Real do Seu Endereço**: Geocodifica o endereço cadastrado no perfil do usuário e calcula o caminho real pelas ruas e rodovias (via *OSRM Routing / OpenStreetMap*).
+- **Destaque Visual da Rota**: Desenha a rota no mapa em camada dupla: **borda em amarelo/dourado neon com linha interna cor vinho**.
+- **Botão Seguir Rota com GPS no Google Maps**: Abre o **Google Maps** em modo de navegação por voz curva a curva a partir do endereço do usuário.
 
 ### 4. Blog Coletivo de Sommeliers (`BlogScreen`)
-- **Objetivo**: Compartilhar conhecimentos, análises de safras e dicas de harmonização.
-- **Funcionalidades**:
-  - Leitura de matérias escritas por Sommeliers Profissionais.
-  - **Aba de Comentários**: Espaço de debate interativo para Admiradores, Vinícolas e Sommeliers.
-  - **Publicar no Blog**: Botão exclusivo para Sommeliers criarem novas postagens.
+- **Conteúdo**: Artigos de degustação e harmonização criados por Sommeliers.
+- **Interação**: Espaço de comentários aberto para Admiradores, Vinícolas e Sommeliers.
+- **Controle do Admin**: Apenas o usuário `admin@winery.com` tem o botão exclusivo para excluir matérias ou comentários.
 
 ### 5. Diretório de Sommeliers Profissionais (`SommeliersScreen`)
-- **Objetivo**: Apresentar o perfil profissional dos Sommeliers cadastrados.
-- **Exibição**: Foto de perfil, Formação Profissional/Certificações, Histórico de Carreira e Dados de Contato.
+- **Perfil Completo**: Lista os Sommeliers com foto, certificações (ex: *WSET*), histórico profissional e dados de contato.
 
-### 6. Painel de Gestão de Produtos da Vinícola (`WineryProductsPanel`)
-- **Objetivo**: Gerenciar os vinhos e preços à venda por vinícola.
-- **Recursos**: Postar novo vinho, alterar preços e fotos, inativar/ativar produtos e botão de **Pagamento Direct**.
+### 6. Painel de Gestão de Produtos e Vinícolas (`WineryProductsPanel` & `EditWineryDialog`)
+- **Edição pelo Criador**: Cada vinícola pode ser editada ou excluída diretamente pelo usuário que a cadastrou (ou pelo admin).
+- **Postagem de Vinhos**: Postagem de bebidas com preço em R\$, uva utilizada, foto do rótulo e **Link de Pagamento Direct** (*MercadoPago, WhatsApp, Loja Online*).
 
-### 7. Painel do Administrador (`AdminDashboardScreen`)
-- **Objetivo**: Controle centralizado exclusivo para `admin@winery.com`.
-- **Ações**: Alterar cadastros, bloquear/desbloquear usuários e excluir contas.
+### 7. Painel do Administrador Master (`AdminDashboardScreen`)
+- **Exclusivo para `admin@winery.com`**:
+  - **Alterar Cadastro**: Editar qualquer dado de usuários.
+  - **Bloquear / Desbloquear**: Impedir login de contas bloqueadas.
+  - **Excluir Cadastro**: Remover usuários e contribuições do sistema.
 
 ---
 
 ## 📖 Tutorial Passo a Passo do Usuário
 
 ### Passo 1: Criando uma Conta por Perfil
-1. Na tela de **Login**, clique em **"Não tem uma conta? Cadastre-se"**.
-2. Escolha o seu **Tipo de Perfil de Usuário**:
-   - **Admirador de Vinhos**: Para consultar vinícolas, vinhos, mapas e ler o blog.
-   - **Sommelier Profissional**: Preencha também sua Formação Profissional (ex: *WSET Level 3*) e Histórico.
-   - **Vinícola / Produtor**: Para cadastrar sua vinícola e gerenciar vinhos à venda.
-3. Preencha seus dados pessoais e clique em **"Cadastrar Conta"**.
+1. Na tela de Login, clique em **"Não tem uma conta? Cadastre-se"**.
+2. Escolha seu perfil (**Admirador**, **Sommelier** ou **Vinícola**).
+3. Caso selecione **Sommelier**, preencha suas certificações e histórico.
+4. Adicione sua foto e clique em **"Cadastrar Conta"**.
 
-### Passo 2: Traçando Rota pelo Google Maps
-1. No mapa ou na lista de vinícolas, clique no botão **"Como Chegar"**.
-2. O aplicativo traçará a rota interna e abrirá o **Google Maps** com navegação GPS em tempo real.
+### Passo 2: Traçando Rota do Seu Endereço no Mapa
+1. Na tela do Mapa, selecione qualquer vinícola e clique em **"Trajeto Real no Mapa"**.
+2. O aplicativo geolocalizará o seu endereço cadastrado e desenhará o caminho destacado pelas ruas.
+3. Clique em **"Seguir Rota com GPS no Google Maps"** para abrir a navegação por voz no celular.
 
-### Passo 3: Participando do Blog Coletivo
-1. Acesse a aba **Blog Coletivo** na navegação inferior.
-2. Leia os artigos publicados pelos Sommeliers e clique em **"Comentar"** para enviar sua pergunta ou feedback.
-3. Se você estiver logado como **Sommelier Profissional**, clique no botão **"+ Publicar no Blog"** para criar um novo artigo.
+### Passo 3: Cadastrando e Gerenciando Vinícolas e Vinhos
+1. Clique no botão **"+ Cadastrar Vinícola"**.
+2. Selecione o **Logo da Vinícola (em 1º lugar)** e digite o **Nome do Proprietário (em 2º lugar)**.
+3. Após salvar, abra a ficha da sua vinícola e clique em **"Painel de Produtos"** para cadastrar vinhos, fotos e links de pagamento.
+
+---
+
+## 📊 Modelagem de Dados (Domain)
+
+```dart
+// Perfil de Usuário
+enum UserRole { admirer, sommelier, winery, admin }
+
+class UserAccount {
+  final String id;
+  final String name;
+  final String email;
+  final UserRole role;
+  final String photoUrl;
+  final String cpf;
+  final String phone;
+  final String address;
+  final bool isBlocked;
+  final String professionalHistory;
+  final String education;
+  final String contactInfo;
+}
+
+// Vinícola
+class Winery {
+  final String id;
+  final String name;
+  final String city;
+  final Set<WineType> wineTypes;
+  final double distanceKm;
+  final double rating;
+  final double latitude;
+  final double longitude;
+  final String address;
+  final String logoUrl;
+  final List<String> photoUrls;
+  final String responsibleName;
+  final String sommelierName;
+  final List<String> cultivatedGrapes;
+  final String creatorEmail;
+}
+
+// Vinho / Produto
+class WineProduct {
+  final String id;
+  final String wineryId;
+  final String name;
+  final WineType type;
+  final String vintage;
+  final double price;
+  final String grape;
+  final String description;
+  final String imageUrl;
+  final String paymentLink;
+  final bool isActive;
+  final String creatorEmail;
+}
+```
 
 ---
 
 ## 🧪 Qualidade e Testes Automatizados
 
-- **Testes de Filtro (`winery_filter_test.dart`)**: Testam busca e ordenação por distância.
+- **Testes de Unidade e Filtro (`winery_filter_test.dart`)**: Testam busca e ordenação por distância.
 - **Testes de Widget (`home_shell_test.dart`)**: Testam navegação entre as 4 abas (*Mapa, Blog Coletivo, Sommeliers e Favoritos*).
 - **Analisador Estático**: 0 avisos e 0 erros com `flutter analyze`.
 
 ---
 
-## 📤 Como Executar e Subir para o GitHub
+## 🚀 Como Executar e Subir para o GitHub
 
 ```bash
+# 1. Obter dependências
 flutter pub get
+
+# 2. Executar testes automatizados
 flutter test
+
+# 3. Executar o analisador de código
 flutter analyze
+
+# 4. Rodar o aplicativo
 flutter run
 ```
 
-### Subindo para o GitHub (`robsonsp29`)
-```bash
-git remote set-url origin https://github.com/robsonsp29/winery.git
-git push -u origin main --force
-```
+### Repositório GitHub (`robsonsp29`)
+- **Link Oficial**: [https://github.com/robsonsp29/winery](https://github.com/robsonsp29/winery)
+- **Branch**: `main`
