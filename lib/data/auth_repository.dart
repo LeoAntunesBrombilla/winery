@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:winery_finder/domain/user_account.dart';
 
-/// Repositório de autenticação de usuários (suporta perfis de Vinícola, Sommelier e Admirador).
+/// Repositório de autenticação de usuários (suporta perfis de Vinícola, Sommelier, Admirador e redefinição de senha).
 class AuthRepository extends ChangeNotifier {
   AuthRepository._();
   static final AuthRepository instance = AuthRepository._();
@@ -93,6 +93,22 @@ class AuthRepository extends ChangeNotifier {
 
     _registeredUsers.add(newUser);
     _currentUser = newUser;
+    notifyListeners();
+    return true;
+  }
+
+  /// Verifica se o e-mail está cadastrado para enviar o link de redefinição de senha.
+  bool sendPasswordResetEmail(String email) {
+    final cleanEmail = email.trim().toLowerCase();
+    return _registeredUsers.any((u) => u.email.toLowerCase() == cleanEmail);
+  }
+
+  /// Redefine a senha do usuário cadastrado.
+  bool resetPassword({required String email, required String newPassword}) {
+    final cleanEmail = email.trim().toLowerCase();
+    final index = _registeredUsers.indexWhere((u) => u.email.toLowerCase() == cleanEmail);
+    if (index == -1) return false;
+    _registeredUsers[index] = _registeredUsers[index].copyWith(password: newPassword);
     notifyListeners();
     return true;
   }
