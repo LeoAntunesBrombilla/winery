@@ -339,15 +339,16 @@ class _MapScreenState extends State<MapScreen> {
             ] else
               const Spacer(),
             const SizedBox(height: 8),
-            // Botão Principal em Destaque: Seguir Rota GPS no Google Maps
-            SizedBox(
-              width: double.infinity,
-              height: 46,
+            // Botão "Seguir Rota com GPS" com tamanho ajustado dinamicamente ao texto
+            Center(
               child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
                 onPressed: () => _openGoogleMapsRoute(winery),
-                icon: const Icon(Icons.navigation, size: 20),
+                icon: const Icon(Icons.navigation, size: 18),
                 label: const Text(
-                  'Seguir Rota com GPS no Google Maps',
+                  'Seguir Rota com GPS',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
