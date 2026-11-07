@@ -4,7 +4,7 @@ import 'package:winery_finder/features/auth/register_screen.dart';
 import 'package:winery_finder/widgets/vineyard_background.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Tela de Login para acesso ao sistema com suporte a "Esqueceu a senha?".
+/// Tela de Login para acesso ao sistema com suporte a "Esqueceu a senha?" e botões ajustados ao tamanho do texto.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -240,7 +240,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (val) => val == null || val.isEmpty ? 'Informe a senha' : null,
                         ),
                         const SizedBox(height: 8),
-                        // Botão Esqueci Minha Senha
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -249,15 +248,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
+                        // Botão ajustado dinamicamente ao tamanho do texto
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                            ),
                             onPressed: _handleLogin,
-                            child: const Text('Entrar', style: TextStyle(fontSize: 16)),
+                            child: const Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).push(

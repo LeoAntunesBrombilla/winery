@@ -872,16 +872,6 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ],
               ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {
-                  showDialog<void>(
-                    context: context,
-                    builder: (_) => const RegisterWineryDialog(),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Cadastrar Vinícola'),
-              ),
             );
           },
         );
