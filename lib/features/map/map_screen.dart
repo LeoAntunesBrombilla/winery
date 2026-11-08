@@ -17,7 +17,7 @@ import 'package:winery_finder/features/map/winery_products_panel.dart';
 import 'package:winery_finder/widgets/help_tutorial_dialog.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo no topo, busca, trajeto real em ruas/rodovias, botão de ajuda e botões de ação na barra superior.
+/// Aba Mapa: exibe o mapa interativo no topo, busca, trajeto detalhado por ruas/avenidas do endereço cadastrado do cliente até a vinícola.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -33,44 +33,26 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos das curvas reais das ruas/rodovias (NUNCA linha reta)
-  List<String> _routeStepsInstructions = <String>[]; // Passo a passo dos nomes das ruas e avenidas
-  LatLng _routeOriginPoint = _defaultOrigin; // Coordenadas do endereço do usuário
-  String _routeInfoText = ''; // Distância e tempo do trajeto real
+  List<LatLng> _routePoints = <LatLng>[]; // Coordenadas detalhadas de cada curva de rua, avenida e rodovia
+  List<String> _routeStepsInstructions = <String>[]; // Nomes das ruas, avenidas e rodovias do itinerário
+  LatLng _routeOriginPoint = _defaultOrigin; // Coordenadas geocodificadas do endereço do cliente
+  String _routeInfoText = ''; // Distância e tempo de viagem
 
-  /// Desenha e exibe a rota INSTANTANEAMENTE (0ms de delay) e refina as curvas das ruas em segundo plano
-  void _fetchRealRoadRoute(Winery winery) {
-    final destination = LatLng(winery.latitude, winery.longitude);
+  /// Geocodifica o endereço cadastrado do cliente e calcula o trajeto detalhado pelas ruas, avenidas e rodovias
+  Future<void> _fetchRealRoadRoute(Winery winery) async {
     final userAddress = AuthRepository.instance.currentUser?.address ?? '';
 
-    final double distKmValue = winery.distanceKm;
-    final int durationMinutes = (distKmValue * 1.3).round().clamp(1, 9999);
-
-    // 1. EXIBIÇÃO INSTANTÂNEA NA TELA (Zero atraso de carregamento para o usuário)
     setState(() {
       _routeWinery = winery;
       _selectedWinery = winery;
-      _routeOriginPoint = _defaultOrigin;
-      _routePoints = <LatLng>[_defaultOrigin, destination];
-      _routeInfoText = 'Trajeto: ${distKmValue.toStringAsFixed(1)} km • ~$durationMinutes min';
+      _routePoints = <LatLng>[]; // Limpa pontos anteriores para NUNCA exibir linha reta
+      _routeStepsInstructions = <String>[];
+      _routeInfoText = 'Mapeando ruas e rodovias a partir de ${userAddress.isNotEmpty ? userAddress : "Seu Endereço"}...';
     });
 
-    final initialBounds = LatLngBounds.fromPoints([_defaultOrigin, destination]);
-    _mapController.fitCamera(
-      CameraFit.bounds(
-        bounds: initialBounds,
-        padding: const EdgeInsets.all(55.0),
-      ),
-    );
-
-    // 2. BUSCA AS CURVAS DETALHADAS DAS RUAS EM SEGUNDO PLANO SEM TRAVAR A TELA
-    _loadDetailedStreetPoints(winery, destination, userAddress);
-  }
-
-  /// Refina as curvas das ruas e nomes das rodovias em segundo plano
-  Future<void> _loadDetailedStreetPoints(Winery winery, LatLng destination, String userAddress) async {
     LatLng originPoint = _defaultOrigin;
 
+    // 1. Geolocaliza as coordenadas exatas do endereço cadastrado do cliente via OpenStreetMap Nominatim
     if (userAddress.isNotEmpty) {
       try {
         final geoUrl = Uri.parse(
@@ -92,10 +74,13 @@ class _MapScreenState extends State<MapScreen> {
           }
         }
       } catch (e) {
-        debugPrint('Erro no geocoding em segundo plano: $e');
+        debugPrint('Erro ao geolocalizar endereço cadastrado do cliente: $e');
       }
     }
 
+    final destination = LatLng(winery.latitude, winery.longitude);
+
+    // 2. Mapeia as curvas reais de ruas, avenidas e rodovias entre o endereço do cliente e a vinícola
     final osrmEndpoints = [
       'https://router.project-osrm.org/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson&steps=true',
       'https://routing.openstreetmap.de/routed-car/route/v1/driving/${originPoint.longitude},${originPoint.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson&steps=true',
@@ -105,7 +90,7 @@ class _MapScreenState extends State<MapScreen> {
       try {
         final url = Uri.parse(endpoint);
         final client = HttpClient();
-        client.connectionTimeout = const Duration(seconds: 4);
+        client.connectionTimeout = const Duration(seconds: 6);
         final request = await client.getUrl(url);
         final response = await request.close();
 
@@ -124,6 +109,7 @@ class _MapScreenState extends State<MapScreen> {
               return LatLng((list[1] as num).toDouble(), (list[0] as num).toDouble());
             }).toList();
 
+            // Extrai a lista do passo a passo das ruas, avenidas e rodovias
             final List<String> stepsList = <String>[];
             if (routeData.containsKey('legs')) {
               final List<dynamic> legs = routeData['legs'] as List<dynamic>;
@@ -153,7 +139,7 @@ class _MapScreenState extends State<MapScreen> {
             final durationMinutes = (durationSeconds / 60).round();
             final distKm = (distanceMeters / 1000).toStringAsFixed(1);
 
-            if (mounted && _routeWinery?.id == winery.id) {
+            if (mounted && _routeWinery?.id == winery.id && points.length > 2) {
               setState(() {
                 _routePoints = points;
                 _routeOriginPoint = originPoint;
@@ -161,28 +147,36 @@ class _MapScreenState extends State<MapScreen> {
                 _routeInfoText = 'Trajeto pelas Ruas: $distKm km • ~$durationMinutes min';
               });
 
-              if (points.isNotEmpty) {
-                final bounds = LatLngBounds.fromPoints(points);
-                _mapController.fitCamera(
-                  CameraFit.bounds(
-                    bounds: bounds,
-                    padding: const EdgeInsets.all(55.0),
-                  ),
-                );
-              }
+              final bounds = LatLngBounds.fromPoints(points);
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                  bounds: bounds,
+                  padding: const EdgeInsets.all(55.0),
+                ),
+              );
+              return;
             }
-            return;
           }
         }
       } catch (e) {
-        debugPrint('Erro OSRM em segundo plano ($endpoint): $e');
+        debugPrint('Erro na busca de rota OSRM ($endpoint): $e');
       }
+    }
+
+    if (mounted) {
+      final double distKmValue = winery.distanceKm;
+      final int durationMinutes = (distKmValue * 1.3).round().clamp(1, 9999);
+      setState(() {
+        _routeOriginPoint = originPoint;
+        _routePoints = <LatLng>[]; // Limpa para NUNCA desenhar linha reta
+        _routeInfoText = 'Trajeto: ${distKmValue.toStringAsFixed(1)} km • ~$durationMinutes min';
+      });
     }
   }
 
   /// Abre a rota detalhada e navegação curva a curva direto no Google Maps
   Future<void> _openGoogleMapsRoute(Winery winery) async {
-    _fetchRealRoadRoute(winery);
+    await _fetchRealRoadRoute(winery);
 
     if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();

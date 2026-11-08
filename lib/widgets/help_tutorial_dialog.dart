@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Diálogo de Ajuda com Guia Completo e Detalhado de Todas as Telas do Sistema na Mesma Tela (Rolável Passo a Passo).
+/// Diálogo de Ajuda com Guia Completo das Telas do Sistema (Rolável Passo a Passo na Mesma Tela).
 class HelpTutorialDialog extends StatefulWidget {
   const HelpTutorialDialog({super.key});
 
@@ -69,7 +69,7 @@ class _HelpTutorialDialogState extends State<HelpTutorialDialog> {
         '📋 Ordem do Formulário: No cadastro de vinícola, o Logo fica em 1º lugar e o Nome do Proprietário/Responsável em 2º lugar.',
         '📸 Galeria do Estabelecimento: Adicione fotos, sommelier e uvas cultivadas pela vinícola.',
         '🍷 Painel de Produtos Direct: A vinícola criadora acessa o painel de produtos para cadastrar vinhos, alterar preços em R\$, ativar/inativar rótulos e inserir o link de Pagamento Direct (MercadoPago/WhatsApp).',
-        '✏️ Permissão Exclusiva: Apenas o usuário que cadastrou a vinícola (ou o admin master) tem permissão para editar ou excluir.',
+        '✏️ Permissão Exclusiva: Apenas o usuário que cadastrou a vinícola tem permissão para editar ou excluir.',
       ],
     },
     {
@@ -83,18 +83,6 @@ class _HelpTutorialDialogState extends State<HelpTutorialDialog> {
         '📝 Publicação por Sommeliers: Sommeliers Profissionais publicam matérias sobre análises de safras, degustação e harmonização.',
         '💬 Comentários Interativos: Admiradores e Vinícolas enviam comentários, tirando dúvidas e interagindo com o autor.',
         '🎓 Diretório Profissional: Apresenta a foto, certificações (WSET, ABS, FISAR), histórico de carreira e contatos dos Sommeliers.',
-      ],
-    },
-    {
-      'id': 'step_6',
-      'stepNum': '6',
-      'title': 'Painel do Administrador Master',
-      'icon': Icons.admin_panel_settings_outlined,
-      'image': 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      'subtitle': 'Controle total exclusivo para o e-mail admin@winery.com',
-      'details': [
-        '🛡️ Gestão de Usuários: Permite ao administrador editar dados cadastrais, alternar o status de Bloquear/Desbloquear contas ou excluir cadastros.',
-        '🗑️ Moderação do Blog: O administrador master tem autoridade exclusiva para excluir matérias ou comentários no Blog Coletivo.',
       ],
     },
   ];
