@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Diálogo de Ajuda e Tutorial Passo a Passo com orientações enriquecidas e detalhadas de uso do sistema.
+/// Diálogo de Ajuda com Guia Completo e Detalhado de Todas as Telas do Sistema na Mesma Tela (Rolável Passo a Passo).
 class HelpTutorialDialog extends StatefulWidget {
   const HelpTutorialDialog({super.key});
 
@@ -10,77 +10,104 @@ class HelpTutorialDialog extends StatefulWidget {
 }
 
 class _HelpTutorialDialogState extends State<HelpTutorialDialog> {
-  int _currentStep = 0;
+  final ScrollController _scrollController = ScrollController();
 
   final List<Map<String, dynamic>> _steps = [
     {
-      'title': '1. Cadastro de Conta & Escolha de Perfil',
+      'id': 'step_1',
+      'stepNum': '1',
+      'title': 'Tela de Cadastro & Perfil de Usuário',
       'icon': Icons.badge_outlined,
       'image': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      'subtitle': 'Acesso personalizado para Admiradores, Sommeliers e Vinícolas',
-      'description':
-          '• Cadastro com Foto: Na tela de cadastro, envie sua foto de perfil pessoal.\n'
-          '• Escolha de Perfil:\n'
-          '   🍷 Admirador de Vinhos: Explora vinícolas, faz compras direct e salva favoritos.\n'
-          '   🎓 Sommelier Profissional: Cadastra formação/certificações (WSET, ABS) e publica matérias no Blog Coletivo.\n'
-          '   🏢 Vinícola / Produtor: Cadastra a vinícola e gerencia vinhos e preços à venda.\n\n'
-          '🔑 Esqueceu a Senha? Na tela de login, clique em "Esqueceu a senha?" para receber o link de redefinição por e-mail e cadastrar uma nova senha imediatamente.',
+      'subtitle': 'Cadastro com foto, redefinição de senha e seleção do tipo de perfil',
+      'details': [
+        '📷 Foto de Perfil Pessoal: Envie uma foto do seu computador ou galeria para identificar sua conta.',
+        '👤 Tipos de Perfil:\n'
+            '   • Admirador de Vinhos (Consumidor): Explora o mapa, visualiza vinhos, compra vinhos direct e salva favoritos.\n'
+            '   • Sommelier Profissional: Cadastra formação/certificações (ex: WSET Level 3, ABS, FISAR), histórico de carreira e publica no Blog Coletivo.\n'
+            '   • Vinícola / Produtor: Cadastra o estabelecimento e gerencia produtos/preços para venda.',
+        '🔑 Redefinição de Senha: Na tela de login, o botão "Esqueceu a senha?" valida seu e-mail cadastrado e permite registrar uma nova senha na hora.',
+      ],
     },
     {
-      'title': '2. Explorando o Mapa Interativo & Filtros',
+      'id': 'step_2',
+      'stepNum': '2',
+      'title': 'Tela de Mapa Interativo & Busca',
       'icon': Icons.map_outlined,
       'image': 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      'subtitle': 'Busca por cidade, tipo de vinho e favoritos independentes',
-      'description':
-          '• Mapa Desobstruído: O mapa fica no topo da tela (nunca coberto por popups) para você visualizar a região.\n'
-          '• Busca & Filtros: Digite o nome da vinícola ou cidade e selecione os chips de tipo de vinho (Tinto, Branco, Espumante, Rosé).\n'
-          '• Favoritos com Um Toque: Clique no ícone de Coração em qualquer vinícola. Seus favoritos são salvos de forma 100% independente na sua conta de usuário.',
+      'subtitle': 'Mapa livre no topo, busca por cidade e salvamento de favoritos',
+      'details': [
+        '🗺️ Visão do Mapa Desobstruída: O mapa fica posicionado no topo da tela, 100% livre para navegação.',
+        '🔍 Busca por Cidade ou Vinícola: Digite no campo de pesquisa para filtrar os estabelecimentos do Brasil e do mundo em tempo real.',
+        '🍷 Chips de Tipos de Vinho: Selecione os chips para filtrar vinícolas por vinho Tinto, Branco, Espumante ou Rosé.',
+        '❤️ Favoritos Independentes: Clique no ícone de Coração para salvar vinícolas. A lista de favoritos é salva de forma 100% independente na sua conta.',
+      ],
     },
     {
-      'title': '3. Trajeto Real pelas Ruas & GPS no Google Maps',
+      'id': 'step_3',
+      'stepNum': '3',
+      'title': 'Tela de Trajeto Real & GPS no Google Maps',
       'icon': Icons.alt_route_outlined,
       'image': 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      'subtitle': 'Mapeamento automático pelas ruas do seu endereço e navegação GPS',
-      'description':
-          '• Mapeamento de Rota em 0ms: Clique no botão "Trajeto Real no Mapa" ao lado da vinícola.\n'
-          '• Origem pelo Seu Endereço: O aplicativo geolocaliza o seu endereço cadastrado no perfil e traça a linha curva real pelas ruas e rodovias.\n'
-          '• Passo a Passo das Vias: O painel abaixo do mapa lista o nome de cada rua, avenida e rodovia do itinerário.\n'
-          '• Seguir no Google Maps: Clique no botão "Seguir Rota com GPS" para abrir a navegação por voz no Google Maps.',
+      'subtitle': 'Mapeamento pelas ruas do seu endereço e navegação GPS por voz',
+      'details': [
+        '🚗 Resposta Instantânea (0ms): Ao clicar em "Trajeto Real no Mapa", a rota é desenhada na hora sem travamentos.',
+        '📍 Origem do Seu Endereço: O aplicativo geolocaliza seu endereço cadastrado no perfil e traça as curvas das ruas e rodovias.',
+        '🌟 Destaque Duplo no Mapa: A rota é exibida com borda dourada/amarela neon e linha interna na cor vinho.',
+        '🛣️ Itinerário das Vias: O painel abaixo do mapa exibe o nome de cada rua, avenida e rodovia do itinerário.',
+        '📲 Seguir Rota com GPS: Clique no botão "Seguir Rota com GPS" para abrir a navegação curva a curva no Google Maps.',
+      ],
     },
     {
-      'title': '4. Cadastro de Vinícolas & Gestão de Vinhos',
+      'id': 'step_4',
+      'stepNum': '4',
+      'title': 'Tela de Cadastro de Vinícola & Venda de Vinhos',
       'icon': Icons.storefront_outlined,
       'image': 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3',
-      'subtitle': 'Publicação de produtos, preços e links de pagamento direct',
-      'description':
-          '• Formulário Organizado: Envie o Logo da Vinícola (em 1º lugar) e o Nome do Proprietário/Responsável (em 2º lugar).\n'
-          '• Informações Completas: Informe cidade, endereço, sommelier, uvas cultivadas e galeria de fotos.\n'
-          '• Painel de Produtos: A vinícola criadora pode cadastrar vinhos, alterar preços, fotos, inativar/ativar itens e disponibilizar o link de pagamento direct (MercadoPago/WhatsApp).',
+      'subtitle': 'Ordem do formulário, galeria de fotos e painel de produtos direct',
+      'details': [
+        '📋 Ordem do Formulário: No cadastro de vinícola, o Logo fica em 1º lugar e o Nome do Proprietário/Responsável em 2º lugar.',
+        '📸 Galeria do Estabelecimento: Adicione fotos, sommelier e uvas cultivadas pela vinícola.',
+        '🍷 Painel de Produtos Direct: A vinícola criadora acessa o painel de produtos para cadastrar vinhos, alterar preços em R\$, ativar/inativar rótulos e inserir o link de Pagamento Direct (MercadoPago/WhatsApp).',
+        '✏️ Permissão Exclusiva: Apenas o usuário que cadastrou a vinícola (ou o admin master) tem permissão para editar ou excluir.',
+      ],
     },
     {
-      'title': '5. Blog Coletivo & Diretório de Sommeliers',
+      'id': 'step_5',
+      'stepNum': '5',
+      'title': 'Tela do Blog Coletivo & Diretório de Sommeliers',
       'icon': Icons.article_outlined,
       'image': 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb',
-      'subtitle': 'Espaço de conteúdo, harmonização e consulta profissional',
-      'description':
-          '• Blog Coletivo: Sommeliers publicam avaliações de safras, notas de degustação e dicas de harmonização. Admiradores e Vinícolas podem enviar comentários e dúvidas.\n'
-          '• Diretório de Sommeliers: Consulte os perfis profissionais dos Sommeliers cadastrados, com formação (ex: WSET Level 3, ABS, FISAR), histórico de carreira e contatos.',
+      'subtitle': 'Mural de matérias, comentários e currículo de sommeliers',
+      'details': [
+        '📝 Publicação por Sommeliers: Sommeliers Profissionais publicam matérias sobre análises de safras, degustação e harmonização.',
+        '💬 Comentários Interativos: Admiradores e Vinícolas enviam comentários, tirando dúvidas e interagindo com o autor.',
+        '🎓 Diretório Profissional: Apresenta a foto, certificações (WSET, ABS, FISAR), histórico de carreira e contatos dos Sommeliers.',
+      ],
     },
     {
-      'title': '6. Painel do Administrador Master',
+      'id': 'step_6',
+      'stepNum': '6',
+      'title': 'Painel do Administrador Master',
       'icon': Icons.admin_panel_settings_outlined,
       'image': 'https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8',
-      'subtitle': 'Gestão centralizada exclusiva para admin@winery.com',
-      'description':
-          '• Gestão de Usuários: Permite ao administrador editar dados cadastrais, alternar status de Bloquear/Desbloquear contas ou excluir cadastros.\n'
-          '• Moderação do Blog: O administrador é o único com permissão para excluir matérias ou comentários inadequados no Blog Coletivo.',
+      'subtitle': 'Controle total exclusivo para o e-mail admin@winery.com',
+      'details': [
+        '🛡️ Gestão de Usuários: Permite ao administrador editar dados cadastrais, alternar o status de Bloquear/Desbloquear contas ou excluir cadastros.',
+        '🗑️ Moderação do Blog: O administrador master tem autoridade exclusiva para excluir matérias ou comentários no Blog Coletivo.',
+      ],
     },
   ];
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final step = _steps[_currentStep];
 
     return AlertDialog(
       title: Row(
@@ -89,95 +116,132 @@ class _HelpTutorialDialogState extends State<HelpTutorialDialog> {
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
-              'Guia de Uso & Tutorial do Sistema',
+              'Guia Completo das Telas do Sistema',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Banner Ilustrativo
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  step['image'] as String,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, err, stack) => Container(
-                    height: 140,
-                    color: theme.colorScheme.primaryContainer,
-                    child: Icon(step['icon'] as IconData, size: 48, color: theme.colorScheme.primary),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Icon(step['icon'] as IconData, color: const Color(0xFF722F37), size: 24),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      step['title'] as String,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                step['subtitle'] as String,
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
-              ),
-              const Divider(height: 16),
-              Text(
-                step['description'] as String,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
-              ),
-              const SizedBox(height: 16),
-              // Indicador Visual de Progresso do Tutorial (Passos)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          children: [
+            // Atalhos rápidos de navegação no topo da caixa
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
                 children: List.generate(_steps.length, (idx) {
-                  final isActive = idx == _currentStep;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: isActive ? 22 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isActive ? const Color(0xFF722F37) : Colors.grey.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(4),
+                  final step = _steps[idx];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6.0),
+                    child: ActionChip(
+                      avatar: CircleAvatar(
+                        radius: 10,
+                        backgroundColor: const Color(0xFF722F37),
+                        child: Text(
+                          step['stepNum'] as String,
+                          style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      label: Text(
+                        (step['title'] as String).split('&')[0].replaceAll('Tela de ', '').trim(),
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      onPressed: () {
+                        _scrollController.animateTo(
+                          idx * 340.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
                     ),
                   );
                 }),
               ),
-            ],
-          ),
+            ),
+            const Divider(height: 16),
+            // Conteúdo Completo Passo a Passo na Mesma Tela (Rolável)
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: _steps.length,
+                itemBuilder: (context, idx) {
+                  final step = _steps[idx];
+                  final details = step['details'] as List<String>;
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: const Color(0xFF722F37),
+                                child: Text(
+                                  step['stepNum'] as String,
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  step['title'] as String,
+                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            step['subtitle'] as String,
+                            style: TextStyle(fontSize: 12, color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              step['image'] as String,
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (ctx, err, stack) => Container(
+                                height: 120,
+                                color: theme.colorScheme.primaryContainer,
+                                child: Icon(step['icon'] as IconData, size: 40, color: theme.colorScheme.primary),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...details.map(
+                            (detailText) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                detailText,
+                                style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
-        if (_currentStep > 0)
-          TextButton(
-            onPressed: () => setState(() => _currentStep--),
-            child: const Text('Anterior'),
-          ),
-        if (_currentStep < _steps.length - 1)
-          FilledButton(
-            onPressed: () => setState(() => _currentStep++),
-            child: const Text('Próximo Passo'),
-          )
-        else
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Entendi! Fechar Guia'),
-          ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Entendi! Fechar Guia'),
+        ),
       ],
     );
   }
