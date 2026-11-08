@@ -14,9 +14,10 @@ import 'package:winery_finder/features/admin/admin_dashboard_screen.dart';
 import 'package:winery_finder/features/map/edit_winery_dialog.dart';
 import 'package:winery_finder/features/map/register_winery_dialog.dart';
 import 'package:winery_finder/features/map/winery_products_panel.dart';
+import 'package:winery_finder/widgets/help_tutorial_dialog.dart';
 import 'package:winery_finder/widgets/winery_logo.dart';
 
-/// Aba Mapa: exibe o mapa interativo no topo, busca, trajeto real ultrarrápido (0ms de atraso) e navegação.
+/// Aba Mapa: exibe o mapa interativo no topo, busca, trajeto real em ruas/rodovias, botão de ajuda e botões de ação na barra superior.
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -32,10 +33,10 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   Winery? _selectedWinery;
   Winery? _routeWinery; // Vinícola com rota ativa
-  List<LatLng> _routePoints = <LatLng>[]; // Pontos das curvas das ruas/rodovias
-  List<String> _routeStepsInstructions = <String>[]; // Nomes das ruas e rodovias do percurso
+  List<LatLng> _routePoints = <LatLng>[]; // Pontos das curvas reais das ruas/rodovias (NUNCA linha reta)
+  List<String> _routeStepsInstructions = <String>[]; // Passo a passo dos nomes das ruas e avenidas
   LatLng _routeOriginPoint = _defaultOrigin; // Coordenadas do endereço do usuário
-  String _routeInfoText = ''; // Distância e tempo de viagem
+  String _routeInfoText = ''; // Distância e tempo do trajeto real
 
   /// Desenha e exibe a rota INSTANTANEAMENTE (0ms de delay) e refina as curvas das ruas em segundo plano
   void _fetchRealRoadRoute(Winery winery) {
@@ -710,13 +711,30 @@ class _MapScreenState extends State<MapScreen> {
             return Scaffold(
               appBar: AppBar(
                 title: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    WineryLogo(size: 32, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text('Winery Finder'),
+                    WineryLogo(size: 28, color: Colors.white),
+                    SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Winery Finder',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
                   ],
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.help_outline),
+                    tooltip: 'Ajuda e Tutorial',
+                    onPressed: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (_) => const HelpTutorialDialog(),
+                      );
+                    },
+                  ),
                   if (isAdmin)
                     IconButton(
                       icon: const Icon(Icons.admin_panel_settings_outlined),
