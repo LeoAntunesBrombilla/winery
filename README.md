@@ -207,6 +207,6 @@ flutter analyze
 flutter run
 ```
 
-### Repositório GitHub (`LeoAntunesBrombilla`)
-- **Link Oficial**: [https://github.com/LeoAntunesBrombilla/winery](https://github.com/LeoAntunesBrombilla/winery)
+### Repositório GitHub (`robsonsp29`)
+- **Link Oficial**: [https://github.com/robsonsp29/winery](https://github.com/robsonsp29/winery)
 - **Branch Principal**: `main`
