@@ -1,33 +1,39 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:winery_finder/domain/coordinates.dart';
 import 'package:winery_finder/domain/winery.dart';
 import 'package:winery_finder/domain/winery_filter.dart';
 
+import '../support/winery_fixture.dart';
+
 void main() {
-  const Winery valduga = Winery(
+  final Winery valduga = testWinery(
     id: '1',
     name: 'Casa Valduga',
     city: 'Bento Gonçalves',
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.tinto, WineType.espumante},
     distanceKm: 12.4,
     rating: 4.7,
   );
-  const Winery aurora = Winery(
+  final Winery aurora = testWinery(
     id: '2',
     name: 'Vinícola Aurora',
     city: 'Bento Gonçalves',
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.branco},
     distanceKm: 3.2,
     rating: 4.3,
   );
-  const Winery miolo = Winery(
+  final Winery miolo = testWinery(
     id: '3',
     name: 'Miolo',
     city: 'Vale dos Vinhedos',
+    coordinates: const Coordinates(-29.17, -51.52),
     wineTypes: <WineType>{WineType.tinto, WineType.rose},
     distanceKm: 0.65,
     rating: 4.8,
   );
-  const List<Winery> all = <Winery>[valduga, aurora, miolo];
+  final List<Winery> all = <Winery>[valduga, aurora, miolo];
 
   group('WineryFilter.apply', () {
     test('sem filtros devolve todas ordenadas por distância', () {
@@ -79,6 +85,19 @@ void main() {
       expect(result.single.id, '1');
     });
 
+    test('busca ignora acentos (US03)', () {
+      expect(WineryFilter.apply(all, query: 'vinicola').single.id, '2');
+      expect(WineryFilter.apply(all, query: 'GONCALVES'), hasLength(2));
+    });
+
+    test('busca só vale a partir de 2 caracteres (US03)', () {
+      expect(WineryFilter.apply(all, query: 'm'), hasLength(3));
+      expect(WineryFilter.apply(all, query: ' m '), hasLength(3));
+      expect(WineryFilter.apply(all, query: 'mi').single.id, '3');
+      expect(WineryFilter.isSearching(' m '), isFalse);
+      expect(WineryFilter.isSearching('mi'), isTrue);
+    });
+
     test('devolve lista vazia quando nada casa', () {
       final List<Winery> result = WineryFilter.apply(all, query: 'garibaldi');
 
@@ -86,14 +105,92 @@ void main() {
     });
   });
 
-  group('WineryFilter.formatDistance', () {
-    test('abaixo de 1 km mostra metros', () {
-      expect(WineryFilter.formatDistance(0.65), '650 m');
+  group('WineryFilter.apply sem localização', () {
+    Winery withoutDistance(Winery w) => w.withDistanceFrom(null);
+
+    test('ordena por nome, ignorando maiúsculas e acentos', () {
+      final List<Winery> result = WineryFilter.apply(
+        <Winery>[valduga, aurora, miolo].map(withoutDistance),
+      );
+
+      expect(result.map((Winery w) => w.name), <String>[
+        'Casa Valduga',
+        'Miolo',
+        'Vinícola Aurora',
+      ]);
     });
 
-    test('a partir de 1 km mostra quilômetros com uma casa', () {
-      expect(WineryFilter.formatDistance(1), '1.0 km');
-      expect(WineryFilter.formatDistance(12.44), '12.4 km');
+    test('acentos não mudam a ordem alfabética', () {
+      final List<Winery> result = WineryFilter.apply(<Winery>[
+        _named('Vinícola Zanotto'),
+        _named('Álvaro Vinhos'),
+        _named('adega Boa Vista'),
+      ]);
+
+      expect(result.map((Winery w) => w.name), <String>[
+        'adega Boa Vista',
+        'Álvaro Vinhos',
+        'Vinícola Zanotto',
+      ]);
+    });
+
+    test('vinícolas com distância vêm antes das sem distância', () {
+      final List<Winery> result = WineryFilter.apply(<Winery>[
+        withoutDistance(aurora),
+        valduga,
+      ]);
+
+      expect(result.map((Winery w) => w.id), <String>['1', '2']);
+    });
+
+    test('mesma distância desempata por nome', () {
+      final List<Winery> result = WineryFilter.apply(<Winery>[
+        _named('Zeta', distanceKm: 5),
+        _named('Alfa', distanceKm: 5),
+      ]);
+
+      expect(result.map((Winery w) => w.name), <String>['Alfa', 'Zeta']);
+    });
+  });
+
+  group('Winery.withDistanceFrom', () {
+    test('calcula a distância até o usuário', () {
+      final Winery winery = valduga.withDistanceFrom(
+        const Coordinates(-29.17, -51.52),
+      );
+
+      expect(winery.distanceKm, 0);
+      expect(winery.id, valduga.id);
+    });
+
+    test('sem localização a distância é null', () {
+      expect(valduga.withDistanceFrom(null).distanceKm, isNull);
+    });
+  });
+
+  group('WineryFilter.formatDistance', () {
+    test('quilômetros com uma casa decimal e vírgula', () {
+      expect(WineryFilter.formatDistance(0.65), '0,7 km');
+      expect(WineryFilter.formatDistance(1), '1,0 km');
+      expect(WineryFilter.formatDistance(12.44), '12,4 km');
+    });
+  });
+
+  group('WineryFilter.formatRating', () {
+    test('uma casa decimal com vírgula', () {
+      expect(WineryFilter.formatRating(4.75), '4,8');
+      expect(WineryFilter.formatRating(4), '4,0');
+    });
+
+    test('sem nota', () {
+      expect(WineryFilter.formatRating(null), 'Sem nota');
     });
   });
 }
+
+Winery _named(String name, {double? distanceKm}) => testWinery(
+  id: name,
+  name: name,
+  coordinates: const Coordinates(-29.17, -51.52),
+  distanceKm: distanceKm,
+);

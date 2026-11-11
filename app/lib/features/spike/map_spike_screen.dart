@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:winery_finder/data/url_opener.dart';
+import 'package:winery_finder/domain/coordinates.dart';
+import 'package:winery_finder/domain/route_link.dart';
+
+/// Desenha o mapa centrado no pin. Injetável para os testes de widget, que
+/// não têm a view nativa do Google Maps.
+typedef SpikeMapBuilder = Widget Function(LatLng pin, String label);
+
+/// Spike do TT01: mapa com um pin e botão que abre a rota no app de
+/// navegação. Valida a chave do Maps e o deep link nos dois sistemas.
+class MapSpikeScreen extends StatelessWidget {
+  const MapSpikeScreen({
+    this.openUrl = openExternally,
+    this.mapBuilder = _googleMap,
+    super.key,
+  });
+
+  /// Casa Valduga, no Vale dos Vinhedos.
+  static const LatLng pin = LatLng(-29.1756, -51.5577);
+  static const String pinLabel = 'Casa Valduga';
+
+  final UrlOpener openUrl;
+  final SpikeMapBuilder mapBuilder;
+
+  static Widget _googleMap(LatLng pin, String label) {
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(target: pin, zoom: 14),
+      markers: <Marker>{
+        Marker(
+          markerId: const MarkerId('spike'),
+          position: pin,
+          infoWindow: InfoWindow(title: label),
+        ),
+      },
+    );
+  }
+
+  Future<void> _openRoute(BuildContext context) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final bool opened = await RouteLink.open(
+      openUrl,
+      Coordinates(pin.latitude, pin.longitude),
+      Theme.of(context).platform,
+    );
+    if (!opened) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível abrir o app de navegação.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Spike: mapa e rota')),
+      body: mapBuilder(pin, pinLabel),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openRoute(context),
+        icon: const Icon(Icons.directions),
+        label: const Text('Traçar rota'),
+      ),
+    );
+  }
+}

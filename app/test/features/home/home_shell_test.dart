@@ -5,6 +5,7 @@ import 'package:winery_finder/app.dart';
 void main() {
   testWidgets('abre na aba Mapa', (WidgetTester tester) async {
     await tester.pumpWidget(const WineryFinderApp());
+    await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Vinícolas próximas aparecerão aqui.'), findsOneWidget);
@@ -16,7 +17,7 @@ void main() {
     await tester.tap(find.text('Favoritos'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Você ainda não salvou nenhuma vinícola.'),
+      find.textContaining('Você ainda não salvou nenhuma vinícola.'),
       findsOneWidget,
     );
 

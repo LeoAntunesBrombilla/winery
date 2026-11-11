@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Modelo documentado em docs/modelo-de-dados.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Admin = usuário com documento em admins/{uid} (criado pelo console).
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidWinery(data) {
+      return data.keys().hasAll([
+          'name', 'city', 'address', 'location', 'wineTypes', 'openingHours',
+          'tastingPriceCents', 'requiresReservation', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() > 0
+        && data.city is string && data.city.size() > 0
+        && data.address is string && data.address.size() > 0
+        && data.location is latlng
+        && data.wineTypes is list
+        && data.openingHours is map
+        && data.openingHours.keys().hasAll(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])
+        && data.tastingPriceCents is int && data.tastingPriceCents >= 0
+        && data.requiresReservation is bool
+        && (data.get('rating', null) == null
+            || (data.rating is number && data.rating >= 0 && data.rating <= 5))
+        && (data.get('photos', []) is list && data.get('photos', []).size() <= 5)
+        && data.updatedAt is timestamp;
+    }
+
+    match /wineries/{wineryId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidWinery(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
