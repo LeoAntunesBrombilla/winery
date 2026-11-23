@@ -34,8 +34,12 @@ versionados**. Cada membro gera os seus seguindo os passos abaixo.
    `firebase.json` (todos no `.gitignore`) e aplica o plugin do Google
    Services no Gradle.
 
-Sem esse passo o app abre normalmente, mas sem Firebase (`initFirebase` só
-registra o erro no console).
+O plugin do Google Services (Gradle) e a referência ao
+`GoogleService-Info.plist` (Xcode) já estão versionados, então o build
+**exige** `android/app/google-services.json` e
+`ios/Runner/GoogleService-Info.plist`. Quem recebeu esses dois arquivos
+prontos (sem acesso ao projeto Firebase) só precisa copiá-los para esses
+caminhos — não é necessário rodar o `flutterfire configure`.
 
 ### 2. Chave do Google Maps
 
